@@ -1,11 +1,11 @@
-9e025ade2554c4a0bf87d17a84f297f9 *DESCRIPTION
+6ab7d4c096bd988a4cab1178bc1cb656 *DESCRIPTION
 4c2b610ca1396d1e01aeb78428d81706 *NAMESPACE
 0b89b4d9f5f92ffb97a8034b79c8c434 *R/LinkFunc.R
 202b99c294963b5ff5e61be223733cb4 *R/data.R
-24f1fd9fa2f4b12fd23a9dd826d2c3c3 *R/maxlogL.R
-e9dbf385cfb533f2a1ad4e51ab8d394e *R/summary.R
-d201e332f72ed27763596b4a072d820f *README.md
-709ff2a8cc05d5e04fa96d469170d182 *build/partial.rdb
+72c5ea89203dc542090772cb3a694b95 *R/maxlogL.R
+0ba8b312b2d8df41a747bfc0c28cb895 *R/summary.R
+32550c1e28de7f2b9b481a83a920e4b1 *README.md
+e5dbd39e786f156d1ac5b41cf0d2d21a *build/partial.rdb
 c3f4a643f0b64dd09af2d8eb9931b14f *data/Fibers.rda
 79c4e531e644b73a070b59b217420f58 *inst/REFERENCES.bib
 1ee0aad96f3a1b928a40257fd51e870f *man/Fibers.Rd
@@ -15,5 +15,5 @@ c3f4a643f0b64dd09af2d8eb9931b14f *data/Fibers.rda
 ceb6dd498bea2138363037ac213e3547 *man/figure/max.PNG
 f622fb9d0c9a5a24cb014177cf60808b *man/log_link.Rd
 7b039e05a9dc42ec005a045c37fe928f *man/logit_link.Rd
-6aa7d7bc04c6604191887a0d48295a6c *man/maxlogL.Rd
-4d9c4b1f62b8f46b76cf2d4c4f2984b0 *man/summary.maxlogL.Rd
+f742e21cc651d85f3611fa718fb70776 *man/maxlogL.Rd
+ea809cc478d2c9b8f60caaed1c79cc1a *man/summary.maxlogL.Rd

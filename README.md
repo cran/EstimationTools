@@ -6,6 +6,8 @@ status](https://travis-ci.org/Jaimemosg/EstimationTools.svg?branch=master)](http
 [![AppVeyor Build
 Status](https://ci.appveyor.com/api/projects/status/github/Jaimemosg/EstimationTools?branch=master&svg=true)](https://ci.appveyor.com/project/Jaimemosg/EstimationTools)
 [![Licence](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version-ago/EstimationTools)](https://cran.r-project.org/package=EstimationTools)
+[![CRAN\_Download\_Badge](http://cranlogs.r-pkg.org/badges/EstimationTools)](https://cran.r-project.org/package=EstimationTools)
 
 # EstimationTools <img src="man/figure/ETLogo.png" align="right" height="200" align="right"/>
 
@@ -14,12 +16,9 @@ Status](https://ci.appveyor.com/api/projects/status/github/Jaimemosg/EstimationT
 <!-- badges: end -->
 
 The goal of `EstimationTools` is to provide a routine for parameter
-estimation of probability density/mass functions in
-`R`.
+estimation of probability density/mass functions in `R`.
 
 ## Installation
-
-<!-- You can install the released version of EstimationTools from [CRAN](https://CRAN.R-project.org) with: -->
 
 You can install the last version of `EstimationTools` typing the
 following command lines in `R` console:
@@ -28,6 +27,14 @@ following command lines in `R` console:
 if (!require('devtools')) install.packages('devtools')
 devtools::install_github('Jaimemosg/EstimationTools', force = TRUE)
 library(EstimationTools)
+```
+
+Or you can install the released version from
+[CRAN](https://cran.r-project.org/package=EstimationTools) if you
+prefer. You can also type the following command lines in `R` console:
+
+``` r
+install.packages("EstimationTools")
 ```
 
 ## Example
@@ -59,17 +66,17 @@ showed below
 library(EstimationTools)
 
 x <- rnorm( n = 10000, mean = 160, sd = 6 )
-fit <- maxlogL( x = x, link = list(over = "sd", fun = "log_link") )
+fit <- maxlogL( x = x, dist = "dnorm", link = list(over = "sd", fun = "log_link") )
 summary(fit)
 #> ---------------------------------------------------------------
 #> Optimization routine: nlminb 
 #> Standard Error calculation: Hessian from optim 
 #> ---------------------------------------------------------------
-#>        AIC      BIC
-#>   64158.35 64154.35
+#>       AIC     BIC
+#>   63992.2 63988.2
 #> ---------------------------------------------------------------
 #>      Estimate  Std. Error
-#> mean  159.9093     0.0598
-#> sd      5.9821     0.0423
+#> mean  160.0910     0.0593
+#> sd      5.9327     0.0420
 #> -----
 ```
