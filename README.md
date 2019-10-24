@@ -5,9 +5,13 @@
 status](https://travis-ci.org/Jaimemosg/EstimationTools.svg?branch=master)](https://travis-ci.org/Jaimemosg/EstimationTools)
 [![AppVeyor Build
 Status](https://ci.appveyor.com/api/projects/status/github/Jaimemosg/EstimationTools?branch=master&svg=true)](https://ci.appveyor.com/project/Jaimemosg/EstimationTools)
-[![Licence](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version-ago/EstimationTools)](https://cran.r-project.org/package=EstimationTools)
+[![Project Status: Active – The project has reached a stable, usable
+state and is being actively
+developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![CRAN\_Download\_Badge](http://cranlogs.r-pkg.org/badges/EstimationTools)](https://cran.r-project.org/package=EstimationTools)
+[![Licence](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+<!-- [![Dependencies](https://tinyverse.netlify.com/badge/EstimationTools)](https://cran.r-project.org/package=EstimationTools) -->
 
 # EstimationTools <img src="man/figure/ETLogo.png" align="right" height="200" align="right"/>
 
@@ -20,7 +24,7 @@ estimation of probability density/mass functions in `R`.
 
 ## Installation
 
-You can install the last version of `EstimationTools` typing the
+You can install the lastest version of `EstimationTools` typing the
 following command lines in `R` console:
 
 ``` r
@@ -37,6 +41,10 @@ prefer. You can also type the following command lines in `R` console:
 install.packages("EstimationTools")
 ```
 
+You can visit the [package
+website](https://Jaimemosg.github.io/EstimationTools/) to explore the
+vignettes (articles) and functions reference.
+
 ## Example
 
 This is a basic example which shows you how to solve a common maximum
@@ -46,15 +54,15 @@ likelihood estimation problem with `EstimationTools`:
 ![
 \\begin{aligned} 
 X &\\sim N(\\mu, \\:\\sigma^2) \\\\
-\\mu &= 160 \\\\
-\\sigma &= 6
+\\mu &= 160 \\quad (\\verb|mean|) \\\\
+\\sigma &= 6 \\quad (\\verb|sd|)
 \\end{aligned}
-](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%20%0AX%20%26%5Csim%20N%28%5Cmu%2C%20%5C%3A%5Csigma%5E2%29%20%5C%5C%0A%5Cmu%20%26%3D%20160%20%5C%5C%0A%5Csigma%20%26%3D%206%0A%5Cend%7Baligned%7D%0A
+](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%20%0AX%20%26%5Csim%20N%28%5Cmu%2C%20%5C%3A%5Csigma%5E2%29%20%5C%5C%0A%5Cmu%20%26%3D%20160%20%5Cquad%20%28%5Cverb%7Cmean%7C%29%20%5C%5C%0A%5Csigma%20%26%3D%206%20%5Cquad%20%28%5Cverb%7Csd%7C%29%0A%5Cend%7Baligned%7D%0A
 "
 \\begin{aligned} 
 X &\\sim N(\\mu, \\:\\sigma^2) \\\\
-\\mu &= 160 \\\\
-\\sigma &= 6
+\\mu &= 160 \\quad (\\verb|mean|) \\\\
+\\sigma &= 6 \\quad (\\verb|sd|)
 \\end{aligned}
 ")  
 
@@ -72,11 +80,11 @@ summary(fit)
 #> Optimization routine: nlminb 
 #> Standard Error calculation: Hessian from optim 
 #> ---------------------------------------------------------------
-#>       AIC     BIC
-#>   63992.2 63988.2
+#>        AIC      BIC
+#>   64158.02 64154.02
 #> ---------------------------------------------------------------
 #>      Estimate  Std. Error
-#> mean  160.0910     0.0593
-#> sd      5.9327     0.0420
+#> mean   159.954     0.0598
+#> sd       5.982     0.0423
 #> -----
 ```

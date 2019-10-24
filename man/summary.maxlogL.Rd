@@ -7,14 +7,16 @@
 \method{summary}{maxlogL}(object, Boot_Std_Err = FALSE, ...)
 }
 \arguments{
-\item{object}{an object class '\code{\link{maxlogL}}'.}
+\item{object}{an object class "\code{\link{maxlogL}}".}
 
-\item{Boot_Std_Err}{a logical variable. If it is \code{TRUE}, standard Errors are calculated by
-bootstrapping. The default is \code{FALSE}.}
+\item{Boot_Std_Err}{a logical variable for standard Errors computation by
+bootstrapping. The default is \code{FALSE}. This computation occurs when hessian
+from \code{\link{optim}} and \code{\link[numDeriv]{hessian}} fails in
+\code{\link{maxlogL}} routine. If this argument is \code{TRUE}, standard errors
+are computed, even if hessian did not fail in \code{\link{maxlogL}} routine.}
 
 \item{...}{arguments passed to \code{\link[boot]{boot}} for estimation of stantdard error with
-non-parametric bootstrap. This computation occurs when option \code{hessian = TRUE} from \code{\link{optim}}
-and \code{\link[numDeriv]{hessian}} fails in \code{\link{maxlogL}} routine.}
+non-parametric bootstrap.}
 }
 \value{
 An object of class 'summary.maxlogL'.
@@ -25,19 +27,60 @@ its standard errors, AIC and BIC.
 This is a \code{summary} method for \code{\link{maxlogL}} object
 }
 \details{
-This \code{summary} method takes standard errors from \code{\link{maxlogL}} and displays them.
+This \code{summary} method takes standard errors from \code{\link{maxlogL}} object and displays them.
 If \code{\link[numDeriv]{hessian}} and Hessian from \code{\link{optim}} fails, standard errors are
 computed with bootstrap. However, if user sets \code{Boot_Std_Err = TRUE} in this summary function,
 standard errors are calculated by bootstrap, even if \code{\link[numDeriv]{hessian}} or Hessian from
 \code{\link{optim}} converges.
+
+Supose that the user creates a variable named \code{fit} that stores \code{\link{maxlogL}} object. The
+summary method modifies the element \code{fit$outputs$StdE_Method} object from \code{Gobal Environment}
+(see the Second Example). If user does not creat a variable, the summary methid it simply calculates
+standard errors (see the Third Example).
 }
 \examples{
-# One known parameter
+#--------------------------------------------------------------------------------
+### First example: One known parameter
+
 x <- rnorm(n = 10000, mean = 160, sd = 6)
 theta_1 <- maxlogL(x = x, dist = 'dnorm', control = list(trace = 1),
                  link = list(over = "sd", fun = "log_link"),
                  fixed = list(mean = 160))
 summary(theta_1)
+
+
+#--------------------------------------------------------------------------------
+# Second example: Binomial probability parameter estimation with variable
+# creation
+
+N <- rbinom(n = 100, size = 10, prob = 0.3)
+phat <- maxlogL(x = N, dist = 'dbinom', fixed = list(size = 10),
+                link = list(over = "prob", fun = "logit_link"))
+
+## Standard error calculation method
+print(phat$outputs$StdE_Method)
+
+## Standard error value (not computed yet, because is computed with 'summary')
+print(phat$outputs$StdE)
+
+## 'summary' method
+summary(phat)
+
+## Now, standard error is updated
+print(phat$outputs$StdE_Method)
+print(phat$outputs$StdE)
+
+
+#--------------------------------------------------------------------------------
+# Third example: Binomial probability parameter estimation with no varaible
+# creation
+
+N <- rbinom(n = 100, size = 10, prob = 0.3)
+summary(maxlogL(x = N, dist = 'dbinom', fixed = list(size = 10),
+                link = list(over = "prob", fun = "logit_link")))
+
+
+#--------------------------------------------------------------------------------
 
 }
 \references{
