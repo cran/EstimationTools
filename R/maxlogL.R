@@ -1,15 +1,16 @@
 #' @title Maximum Likelihood Estimation for parametric distributions
+#' @family maxlogL
+#'
+#' @author Jaime Mosquera Gutiérrez, \email{jmosquerag@unal.edu.co}
 #'
 #' @description
 #' Function to compute maximum likelihood estimators (MLE)
 #' of any distribution implemented in \code{R}.
 #'
-#' @author Jaime Mosquera Gutiérrez, \email{jmosquerag@unal.edu.co}
-#'
 #' @param x a vector with data to be fitted. This argument must be a matrix
 #'          with hierarchical distributions.
 #' @param dist a length-one character vector with the name of density/mass function
-#'             of interest. The default value is "dnorm", to compute maximum likelihood
+#'             of interest. The default value is \code{'dnorm'}, to compute maximum likelihood
 #'             estimators of normal distribution.
 #' @param fixed a list with fixed/known parameters of distribution of interest.
 #'              Fixed parameters must be passed with its name.
@@ -18,9 +19,9 @@
 #'             function. There are three link functions available: \code{\link{log_link}},
 #'             \code{\link{logit_link}} and \code{\link{NegInv_link}}.
 #' @param start a numeric vector with initial values for the parameters to be estimated.
-#' @param lower a numeric vector with lower bounds, with the same lenght of argument
+#' @param lower a numeric vector with lower bounds, with the same length of argument
 #'              `start` (for box-constrained optimization).
-#' @param upper a numeric vector with upper bounds, with the same lenght of argument
+#' @param upper a numeric vector with upper bounds, with the same length of argument
 #'              `start` (for box-constrained optimization).
 #' @param optimizer a lenght-one character vector with the name of optimization routine.
 #'                  \code{\link{nlminb}}, \code{\link{optim}} and
@@ -28,11 +29,11 @@
 #'                  is the default routine.
 #' @param control control parameters of the optimization routine. Please, visit documentation of selected
 #'                optimizer for further information.
-#' @param ... Further arguments to be supplied to the optimizer.
+#' @param silent  logical. If TRUE, warnings of \code{maxlogL} are suppressed.
+#' @param ... further arguments to be supplied to the optimizer.
 #'
-#' @return A list with class \code{"maxlogL"} containing the following
-#'  lists:
-#' \item{fit}{A list with output information about estimation and method used.}
+#' @return A list with class \code{"maxlogL"} containing the following lists:
+#' \item{fit}{A list with output information about estimation.}
 #' \item{inputs}{A list with all input arguments.}
 #' \item{outputs}{A list with some output additional information:
 #'       \itemize{
@@ -42,23 +43,26 @@
 #'        }
 #' }
 #'
-#' @details \code{maxlogL} calculates computationally the likelihood function corresponding to
+#' @details \code{maxlogL} computes the likelihood function corresponding to
 #' the distribution specified in argument \code{dist} and maximizes it through
 #' \code{\link{optim}}, \code{\link{nlminb}} or \code{\link{DEoptim}}. \code{maxlogL}
 #' generates an S3 object of class \code{maxlogL}.
 #'
-#' @note The following generic functions can be used with a \code{maxlogL} object:
-#' \code{summary}
+#' Noncentrality parameters must be named as \code{ncp} in the distribution.
 #'
-#' @importFrom stats nlminb optim pnorm
+#' @note The following generic functions can be used with a \code{maxlogL} object:
+#' \code{summary, print, AIC, BIC, logLik}.
+#'
+#' @importFrom stats nlminb optim
 #' @importFrom DEoptim DEoptim
 #' @importFrom BBmisc is.error
 #' @importFrom numDeriv hessian
-#' @export
 #'
 #' @examples
+#' library(EstimationTools)
+#'
 #' #--------------------------------------------------------------------------------
-#' # Estimation with one fixed parameter
+#' # Example 1: estimation with one fixed parameter
 #' x <- rnorm(n = 10000, mean = 160, sd = 6)
 #' theta_1 <- maxlogL(x = x, dist = 'dnorm', control = list(trace = 1),
 #'                  link = list(over = "sd", fun = "log_link"),
@@ -67,22 +71,39 @@
 #'
 #'
 #' #--------------------------------------------------------------------------------
-#' # Both parameters of normal distribution mapped with logarithmic function
-#' theta_2 <- maxlogL( x = x, dist = "dnorm",
-#'                     link = list(over = c("mean","sd"),
-#'                                 fun = c("log_link","log_link")) )
+#' # Example 2: both parameters of normal distribution mapped with logarithmic
+#' # function
+#' theta_2 <- maxlogL(x = x, dist = "dnorm",
+#'                    link = list(over = c("mean","sd"),
+#'                                fun = c("log_link","log_link")))
 #' summary(theta_2)
 #'
 #'
 #' #--------------------------------------------------------------------------------
-#' # Parameter estimation in ZIP distribution
+#' # Example 3: parameter estimation in ZIP distribution
+#' if (!require('gamlss.dist')) install.packages('gamlss.dist')
 #' library(gamlss.dist)
-#' z <- rZIP(n=10000, mu=6, sigma=0.08)
-#' theta_3  <- maxlogL( x = z, dist='dZIP', start = c(0, 0), lower = c(-Inf, -Inf),
-#'                      upper = c(Inf, Inf), optimizer = 'optim',
-#'                      link = list(over=c("mu", "sigma"),
-#'                      fun = c("log_link", "logit_link")) )
+#' z <- rZIP(n=1000, mu=6, sigma=0.08)
+#' theta_3  <- maxlogL(x = z, dist='dZIP', start = c(0, 0), lower = c(-Inf, -Inf),
+#'                    upper = c(Inf, Inf), optimizer = 'optim',
+#'                    link = list(over=c("mu", "sigma"),
+#'                    fun = c("log_link", "logit_link")))
 #' summary(theta_3)
+#'
+#'
+#' #--------------------------------------------------------------------------------
+#' # Example 4: parameter estimation with fixed noncentrality parameter.
+#' y_2 <- rbeta(n = 1000, shape1 = 2, shape2 = 3)
+#' theta_41 <- maxlogL(x = y_2, dist = "dbeta",
+#'                     link = list(over = c("shape1", "shape2"),
+#'                     fun = c("log_link","log_link")))
+#' summary(theta_41)
+#'
+#' # It is also possible define 'ncp' as fixed parameter
+#' theta_42 <- maxlogL(x = y_2, dist = "dbeta", fixed = list(ncp = 0),
+#'                     link = list(over = c("shape1", "shape2"),
+#'                     fun = c("log_link","log_link")) )
+#' summary(theta_42)
 #'
 #'
 #' #--------------------------------------------------------------------------------
@@ -99,18 +120,22 @@
 #' @importFrom Rdpack reprompt
 #'
 #' @seealso \code{\link{summary.maxlogL}}, \code{\link{optim}}, \code{\link{nlminb}},
-#'          \code{\link{DEoptim}}, \code{\link{DEoptim.control}}
+#'          \code{\link{DEoptim}}, \code{\link{DEoptim.control}},
+#'          \code{\link{maxlogLreg}}, \code{\link{bootstrap_maxlogL}}
+#'
 #==============================================================================
 # Maximization routine --------------------------------------------------------
 #==============================================================================
+#' @export
 maxlogL <- function(x, dist = 'dnorm', fixed = NULL, link = NULL,
                     start = NULL, lower = NULL, upper = NULL,
-                    optimizer = 'nlminb', control = NULL, ...){
+                    optimizer = 'nlminb', control = NULL, silent = FALSE, ...){
 
+  if (silent) options(warn = -1)
   call <- match.call()
 
   # List of arguments of density function
-  arguments <- as.list(args(dist))
+  arguments <- formals(dist)
 
   # Common errors
   if ( !is.list(control) ){
@@ -162,8 +187,28 @@ maxlogL <- function(x, dist = 'dnorm', fixed = NULL, link = NULL,
                 "function. \n"))
   }
 
-  # Exclusion of fixed parameters from objective variables
-  pos.deletion <- match(names(fixed), names(arguments))
+  # Exclusion of fixed or default (ncp) parameters from objective variables
+  # class_arguments <- sapply(arguments, class)
+  names_arguments <- names(arguments)
+  pos_ncp <- sapply(names_arguments, function(y) grep('^ncp*.', y)[1])
+  pos_ncp <- which(!is.na(pos_ncp))
+
+  if ( length(pos_ncp) > 0 ){
+    class_arguments <- sapply(arguments, class)
+    num_ncp <- which((class_arguments[pos_ncp] == "numeric" |
+                        class_arguments[pos_ncp] == "symbol"))
+    if ( length(num_ncp) > 0 ){
+      fixed[[names_arguments[pos_ncp]]] <- arguments[[pos_ncp]]
+    }
+  }
+  names_fixed <- names(fixed)
+    # if ( !pos_and_fix & class_ncp == "numeric" ){
+    # if ( class_ncp == "numeric" ){
+    #   fixed[[names_arguments[pos_ncp]]] <- arguments[[pos_ncp]]
+    #   names_fixed <- names(fixed)
+    # }
+
+  pos.deletion <- match(names_fixed, names_arguments)
   if ( length(pos.deletion) > 0 ) arguments <- arguments[-pos.deletion]
 
   # Parameters counting
@@ -241,24 +286,47 @@ maxlogL <- function(x, dist = 'dnorm', fixed = NULL, link = NULL,
   # fit$hessian <- try(optimHess(par = fit$par, fn = ll.noLink, method = 'L-BFGS-B',
   #                              lower = fit$par - 0.5*fit$par,
   #                              upper = fit$par + 0.5*fit$par), silent = TRUE)
-
   StdE_Method <- "Hessian from optim"
   if ( (any(is.na(fit$hessian)) | is.error(fit$hessian)) |
        any(is.character(fit$hessian)) ){
     fit$hessian <- try(numDeriv::hessian(ll.noLink, fit$par), silent = TRUE)
     StdE_Method <- "numDeriv::hessian"
   }
-  if ( (any(is.na(fit$hessian)) | is.error(fit$hessian)) |
-       any(is.character(fit$hessian)) ) fit$hessian <- NA
 
+  ## Standard error computation
+  if ( (any(is.na(fit$hessian)) | is.error(fit$hessian)) |
+       any(is.character(fit$hessian)) ){
+    StdE_Method <- "'optim' and 'numDeriv' failed"
+    fit$hessian <- NA
+    fit$StdE <- NA
+  } else {
+    fit$StdE <- sqrt(diag(solve(fit$hessian)))
+  }
+
+  ## Parameter names
+  names_numeric <- rep("", times = npar)
+  j <- 1
+  for (i in 1:length(arguments)){
+    if (is.numeric(arguments[[i]]) || is.symbol(arguments[[i]])){
+      names_numeric[j] <- names(arguments[i])
+      j <- j + 1
+    }
+  }
+  names_numeric <- names_numeric[-which(names_numeric == "x")]
+  names(fit$par) <- names_numeric
+
+  # fit stores the following information:
+  # fit <- list(par, objective, hessian, StdE)
   inputs <- list(call = call, dist = dist, fixed = fixed,
                  link = link, optimizer = optimizer,
                  start = start, lower = lower, upper = upper,
-                 x = x)
+                 data = x)
   outputs <- list(npar = npar - length(fixed), n = length(x),
-                  StdE_Method = StdE_Method, StdE = "Not computed yet")
+                  StdE_Method = StdE_Method, type = "maxlogL",
+                  par_names = names_numeric)
   result <- list(fit = fit, inputs = inputs, outputs = outputs)
   class(result) <- "maxlogL"
+  if (silent) options(warn = 0)
   return(result)
 }
 #==============================================================================

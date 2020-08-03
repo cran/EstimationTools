@@ -1,6 +1,8 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+[![Lifecycle:
+maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 [![Travis build
 status](https://travis-ci.org/Jaimemosg/EstimationTools.svg?branch=master)](https://travis-ci.org/Jaimemosg/EstimationTools)
 [![AppVeyor Build
@@ -22,10 +24,15 @@ developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.re
 The goal of `EstimationTools` is to provide a routine for parameter
 estimation of probability density/mass functions in `R`.
 
+*Edit (27/07/2020)* – We have implemented new tools and we have
+performed some deep modifications in our `summary` method for `maxlogL`
+objects. You can find out in our
+[changelog](https://jaimemosg.github.io/EstimationTools/news/index.html).
+
 ## Installation
 
-You can install the lastest version of `EstimationTools` typing the
-following command lines in `R` console:
+You can install the latest version (2.0.0) of `EstimationTools` typing
+the following command lines in `R` console:
 
 ``` r
 if (!require('devtools')) install.packages('devtools')
@@ -33,7 +40,7 @@ devtools::install_github('Jaimemosg/EstimationTools', force = TRUE)
 library(EstimationTools)
 ```
 
-Or you can install the released version from
+Or you can install the released version (2.0.0) from
 [CRAN](https://cran.r-project.org/package=EstimationTools) if you
 prefer. You can also type the following command lines in `R` console:
 
@@ -43,48 +50,10 @@ install.packages("EstimationTools")
 
 You can visit the [package
 website](https://Jaimemosg.github.io/EstimationTools/) to explore the
-vignettes (articles) and functions reference.
+functions reference and our vignettes (articles).
 
-## Example
+## Examples
 
-This is a basic example which shows you how to solve a common maximum
-likelihood estimation problem with `EstimationTools`:
-
-  
-![
-\\begin{aligned} 
-X &\\sim N(\\mu, \\:\\sigma^2) \\\\
-\\mu &= 160 \\quad (\\verb|mean|) \\\\
-\\sigma &= 6 \\quad (\\verb|sd|)
-\\end{aligned}
-](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Baligned%7D%20%0AX%20%26%5Csim%20N%28%5Cmu%2C%20%5C%3A%5Csigma%5E2%29%20%5C%5C%0A%5Cmu%20%26%3D%20160%20%5Cquad%20%28%5Cverb%7Cmean%7C%29%20%5C%5C%0A%5Csigma%20%26%3D%206%20%5Cquad%20%28%5Cverb%7Csd%7C%29%0A%5Cend%7Baligned%7D%0A
-"
-\\begin{aligned} 
-X &\\sim N(\\mu, \\:\\sigma^2) \\\\
-\\mu &= 160 \\quad (\\verb|mean|) \\\\
-\\sigma &= 6 \\quad (\\verb|sd|)
-\\end{aligned}
-")  
-
-The solution for a data set generated with size
-![n=10000](https://latex.codecogs.com/png.latex?n%3D10000 "n=10000") is
-showed below
-
-``` r
-library(EstimationTools)
-
-x <- rnorm( n = 10000, mean = 160, sd = 6 )
-fit <- maxlogL( x = x, dist = "dnorm", link = list(over = "sd", fun = "log_link") )
-summary(fit)
-#> ---------------------------------------------------------------
-#> Optimization routine: nlminb 
-#> Standard Error calculation: Hessian from optim 
-#> ---------------------------------------------------------------
-#>        AIC      BIC
-#>   64158.02 64154.02
-#> ---------------------------------------------------------------
-#>      Estimate  Std. Error
-#> mean   159.954     0.0598
-#> sd       5.982     0.0423
-#> -----
-```
+You can visit our estimation
+[vignette](https://jaimemosg.github.io/EstimationTools/articles/Examples.html)
+to see the examples.

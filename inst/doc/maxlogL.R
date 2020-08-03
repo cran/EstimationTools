@@ -1,5 +1,4 @@
 ### R code from vignette source 'maxlogL.Rnw'
-### Encoding: ISO8859-1
 
 ###################################################
 ### code chunk number 1: preliminaries
@@ -305,7 +304,7 @@ legend("bottomleft", legend=c("Kaplan-Meier estimator","PL survival function"),
 
 
 ###################################################
-### code chunk number 20: maxlogL.Rnw:601-609
+### code chunk number 20: maxlogL.Rnw:604-612
 ###################################################
 # Power model implementation
 power_logL <- function(x, a, b, log = FALSE){
@@ -318,7 +317,7 @@ power_logL <- function(x, a, b, log = FALSE){
 
 
 ###################################################
-### code chunk number 21: maxlogL.Rnw:614-625
+### code chunk number 21: maxlogL.Rnw:617-628
 ###################################################
 # Power model estimation
 m <- 100 # Independent trials
@@ -334,7 +333,7 @@ summary(retention.pwr)
 
 
 ###################################################
-### code chunk number 22: maxlogL.Rnw:634-654
+### code chunk number 22: maxlogL.Rnw:637-657
 ###################################################
 # Exponential model implementation
 exp_logL <- function(x, a, b, log = FALSE){
@@ -381,152 +380,5 @@ summary(retention.exp)
 ## curve(expo(x, a=a.exp, b=b.exp), from=1, to=18, lwd=2, lty=2, add=TRUE)
 ## legend("topright", legend=c("Observed", "Power model", "Exponential model"),
 ##        lwd=c(0,2,2), pch=c(19,NA,NA), lty=c(0,1,2), cex=2.5)
-
-
-###################################################
-### code chunk number 24: varnorm_a (eval = FALSE)
-###################################################
-## param.val=list(mean=5, sd=2)
-## distrib <- 'dnorm'
-## 
-## Parameters1 <- read.table(file=paste0("params_", distrib, "_", "nlminb",
-##                                       ".txt"),
-##                           header=TRUE)
-## Parameters2 <- read.table(file=paste0("params_", distrib, "_", 'optim',
-##                                       ".txt"),
-##                           header=TRUE)
-## Parameters <- rbind(Parameters1, Parameters2)
-## 
-## par(family="serif", cex.lab=2.5, cex.axis=2.5,
-##     mar=c(5,4,4,2)+0.1, mai=c(0.9,1.5,0.5,0.5), las=0)
-## mu <- aggregate(mean ~ n + method, data=Parameters, FUN=var)
-## plot(mu[mu$method=='nlminb',]$n, mu[mu$method=='nlminb',]$mean,
-##      xlab="n", ylab=expression(hat(mu)), type="l", lwd=2, ylim=c(0,1))
-## lines(mu[mu$method=='optim',]$n, mu[mu$method=='optim',]$mean,
-##       lwd=1, col="dodgerblue3")
-## legend("topright", legend=c('nlminb', 'optim (BFGS)'),
-##        col=c(1,"dodgerblue3"), lwd=c(2,1), cex=2.5)
-## # abline(h=param.val$mean, col=2, lwd=4)
-
-
-###################################################
-### code chunk number 25: varnorm_b (eval = FALSE)
-###################################################
-## par(family="serif", cex.lab=2.5, cex.axis=2.5,
-##     mar=c(5,4,4,2)+0.1, mai=c(0.9,1.5,0.5,0.5), las=0)
-## sigma <- aggregate(sd ~ n + method, data=Parameters, FUN=var)
-## plot(sigma[sigma$method=='nlminb',]$n, sigma[sigma$method=='nlminb',]$sd,
-##      xlab="n", ylab=expression(hat(sigma)), type="l", lwd=2, ylim=c(0,0.2))
-## lines(sigma[sigma$method=='optim',]$n, sigma[sigma$method=='optim',]$sd,
-##       type="l", lwd=1, col="dodgerblue3")
-## legend("topright", legend=c('nlminb', 'optim (BFGS)'),
-##        col=c(1,"dodgerblue3"), lwd=c(2,1), cex=2.5)
-## # abline(h=param.val$sd, col=2, lwd=4)
-
-
-###################################################
-### code chunk number 26: varZIPa (eval = FALSE)
-###################################################
-## param.val=list(mu=6, sigma=0.08)
-## distrib <- 'dZIP'
-## 
-## Parameters1 <- read.table(file=paste0("params_", distrib, "_", "nlminb",
-##                                       ".txt"),
-##                           header=TRUE)
-## Parameters2 <- read.table(file=paste0("params_", distrib, "_", 'optim',
-##                                       ".txt"),
-##                           header=TRUE)
-## Parameters <- rbind(Parameters1, Parameters2)
-## 
-## par(family="serif", cex.lab=2.5, cex.axis=2.5,
-##     mar=c(7,6.5,4,2)+0.1, mai=c(1.5,1.5,0.5,0.5), las=0)
-## mu <- aggregate(mu ~ n + method, data=Parameters, FUN=var)
-## plot(mu[mu$method=='nlminb',]$n, mu[mu$method=='nlminb',]$mu,
-##      xlab="", ylab="", type="l", lwd=2, ylim=c(0,0.4))
-## lines(mu[mu$method=='optim',]$n, mu[mu$method=='optim',]$mu,
-##       lwd=1, col="dodgerblue3")
-## legend("topright", legend=c('nlminb', 'optim (BFGS)'),
-##        col=c(1,"dodgerblue3"), lwd=c(2,1), cex=2.5)
-## abline(h=param.val$mu, col=2, lwd=4)
-## title(ylab=expression(hat(lambda)), mgp=c(5,1,0), cex.lab=2.5)
-## title(xlab=expression(n), mgp=c(3.5,1,0), cex.lab=2.5)
-## # mtext("(a)", side=1, line=6.5, cex=3)
-
-
-###################################################
-### code chunk number 27: varZIPb (eval = FALSE)
-###################################################
-## par(family="serif", cex.lab=2, cex.axis=2.5,
-##     mar=c(7,6.5,4,2)+0.1, mai=c(1.5,1.5,0.5,0.5), las=0)
-## sigma <- aggregate(sigma ~ n + method, data=Parameters, FUN=var)
-## plot(sigma[sigma$method=='nlminb',]$n, sigma[sigma$method=='nlminb',]$sigma,
-##      xlab="", ylab="", type="l", lwd=2, ylim=c(0,0.004))
-## lines(sigma[sigma$method=='optim',]$n, sigma[sigma$method=='optim',]$sigma,
-##       type="l", lwd=1, col="dodgerblue3")
-## legend("topright", legend=c('nlminb', 'optim (BFGS)'),
-##        col=c(1,"dodgerblue3"), lwd=c(2,1), cex=2.5)
-## abline(h=param.val$sigma, col=2, lwd=4)
-## title(ylab=expression(hat(pi)), mgp=c(5,1,0), cex.lab=2.5)
-## title(xlab=expression(n), mgp=c(3.5,1,0), cex.lab=2.5)
-## # mtext("(b)", side=1, line=6.5, cex=3)
-
-
-###################################################
-### code chunk number 28: varEEBa (eval = FALSE)
-###################################################
-## param.val=list(mu = 0.5, sigma = 1, nu = 1.5, size = 10)
-## distrib <- 'dEEB'
-## 
-## Parameters1 <- read.table(file=paste0("params_", distrib, "_", "nlminb",
-##                                       ".txt"),
-##                           header=TRUE)
-## Parameters2 <- read.table(file=paste0("params_", distrib, "_", 'optim',
-##                                       ".txt"),
-##                           header=TRUE)
-## Parameters <- rbind(Parameters1, Parameters2)
-## 
-## par(family="serif", cex.lab=2.5, cex.axis=2.5,
-##     mar=c(5,4,4,2)+0.1, mai=c(0.9,1.5,0.5,0.5))
-## mu <- aggregate(mu ~ n + method, data=Parameters, FUN=var)
-## plot(mu[mu$method=='nlminb',]$n, mu[mu$method=='nlminb',]$mu,
-##      xlab="n", ylab=expression(hat(mu)), type="l", lwd=2)
-## lines(mu[mu$method=='optim',]$n, mu[mu$method=='optim',]$mu,
-##       lwd=1, col="dodgerblue3")
-## legend("topright", legend=c('nlminb', 'optim (BFGS)'),
-##        col=c(1,"dodgerblue3"), lwd=c(2,1), cex=2.5)
-## # abline(h=param.val$mu, col=2, lwd=3)
-
-
-###################################################
-### code chunk number 29: varEEBb (eval = FALSE)
-###################################################
-## par(family="serif", cex.lab=2.5, cex.axis=2.5,
-##     mar=c(5,4,4,2)+0.1, mai=c(0.9,1.5,0.5,0.5))
-## sigma <- aggregate(sigma ~ n + method, data=Parameters, FUN=var)
-## plot(sigma[sigma$method=='nlminb',]$n[3:nrow(sigma)],
-##      sigma[sigma$method=='nlminb',]$sigma[3:nrow(sigma)],
-##      xlab="n", ylab=expression(hat(sigma)), type="l", lwd=2, ylim=c(0,2))
-## lines(sigma[sigma$method=='optim',]$n, sigma[sigma$method=='optim',]$sigma,
-##       lwd=1, col="dodgerblue3")
-## legend("topright", legend=c('nlminb', 'optim (BFGS)'),
-##        col=c(1,"dodgerblue3"), lwd=c(2,1), cex=2.5)
-## # abline(h=param.val$sigma, col=2, lwd=3)
-
-
-###################################################
-### code chunk number 30: varEEBc (eval = FALSE)
-###################################################
-## par(family="serif", cex.lab=2.5, cex.axis=2.5,
-##     mar=c(5,4,4,2)+0.1, mai=c(0.9,1.5,0.5,0.5))
-## nu <- aggregate(nu ~ n + method, data=Parameters, FUN=var)
-## plot(subset(nu, method=="nlminb")$n[4:nrow(nu)], ylim=c(0,0.15),
-##      nu[nu$method=='nlminb',]$nu[4:nrow(nu)], xlim=c(1,1000),
-##      xlab="n", ylab=expression(hat(nu)), type="l", lwd=2)
-## lines(nu[nu$method=='optim',]$n[4:nrow(nu)],
-##       nu[nu$method=='optim',]$nu[4:nrow(nu)],
-##       type="l", lwd=1, col="dodgerblue3")
-## legend("topright", legend=c('nlminb', 'optim (BFGS)'),
-##        col=c(1,"dodgerblue3"), lwd=c(2,1), cex=2.5)
-## # abline(h=param.val$nu, col=2, lwd=3)
 
 

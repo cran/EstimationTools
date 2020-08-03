@@ -1,28 +1,44 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <meta name="author" content="Jaime Mosquera" />
 
-<meta name="date" content="2019-10-24" />
+<meta name="date" content="2020-08-02" />
 
 <title>Bootstrap implementation</title>
 
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
@@ -32,14 +48,16 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(title);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -48,9 +66,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -96,7 +114,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -117,9 +135,6 @@ padding-right: 2em;
 font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 font-size: 14px;
 line-height: 1.35;
-}
-#header {
-text-align: center;
 }
 #TOC {
 clear: both;
@@ -288,7 +303,8 @@ code > span.st { color: #d14; }
 code > span.co { color: #888888; font-style: italic; } 
 code > span.ot { color: #007020; } 
 code > span.al { color: #ff0000; font-weight: bold; } 
-code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
 
@@ -303,13 +319,13 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">Bootstrap implementation</h1>
 <h4 class="author">Jaime Mosquera</h4>
-<h4 class="date">2019-10-24</h4>
+<h4 class="date">2020-08-02</h4>
 
 
 
-<div id="bootstrap-procedure" class="section level2">
-<h2>Bootstrap procedure</h2>
-<p><code>maxlogL</code> estimates parameters of probability functions tby Maximum Likelihood. The variance-covariance matrix is computed from Fisher information matrix, which is obtained by means of the Inverse Hessian matrix of estimators:</p>
+<div id="computation-of-standard-errors" class="section level2">
+<h2>Computation of standard errors</h2>
+<p>Objects of <code>maxlogL</code> class (outputs from<code>maxlogL</code> and <code>maxlogLreg</code>) stores the estimated parameters of probability density/mass functions by Maximum Likelihood. The variance-covariance matrix is computed from Fisher information matrix, which is obtained by means of the Inverse Hessian matrix of estimators:</p>
 <p><span class="math display">\[\begin{equation}
 Var(\hat{\boldsymbol{\theta}}) = I^{-1}(\hat{\boldsymbol{\theta}}) = C(\hat{\boldsymbol{\theta}}),
 \end{equation}\]</span></p>
@@ -318,80 +334,118 @@ Var(\hat{\boldsymbol{\theta}}) = I^{-1}(\hat{\boldsymbol{\theta}}) = C(\hat{\bol
 SE(\hat{\boldsymbol{\theta}}) = \sqrt{C_{jj}(\hat{\boldsymbol{\theta}})},
 \end{equation}\]</span></p>
 <p>To install the package, type the following commands:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="cf">if</span> (<span class="op">!</span><span class="kw">require</span>(<span class="st">&#39;devtools&#39;</span>)) <span class="kw">install.packages</span>(<span class="st">&#39;devtools&#39;</span>)</a>
-<a class="sourceLine" id="cb1-2" title="2">devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">&#39;Jaimemosg/EstimationTools&#39;</span>, <span class="dt">force =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
-<p>The Hessian matrix is computed in the following way:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="cf">if</span> (<span class="op">!</span><span class="kw">require</span>(<span class="st">&#39;devtools&#39;</span>)) <span class="kw">install.packages</span>(<span class="st">&#39;devtools&#39;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2"></a>devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">&#39;Jaimemosg/EstimationTools&#39;</span>, <span class="dt">force =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
+<p>In <strong>EstimationTools</strong> Hessian matrix is computed in the following way:</p>
 <ul>
 <li>Firstly, it is estimated through <code>optim</code>, with option <code>hessian = TRUE</code> in <code>maxlogL</code> function.</li>
 <li>If the previous implementation fails, it is calculated with <code>hessian</code> function from <strong>numDeriv</strong> package.</li>
-<li>If both of the previous methods fail, then standard errors are computed by bootstraping.</li>
+<li>If both of the previous methods fail, then standard errors are computed by bootstrapping with the function <code>bootstrap_maxlogL</code>.</li>
 </ul>
-<p>Additionally, <strong>EstimationTools</strong> allows implementation of bootstrap for standard error estimation, even if the Hessian computation does not fail. The following chunks illustrates this feature:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">library</span>(EstimationTools)</a>
-<a class="sourceLine" id="cb2-2" title="2"></a>
-<a class="sourceLine" id="cb2-3" title="3">x &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dt">n =</span> <span class="dv">10000</span>, <span class="dt">mean =</span> <span class="dv">160</span>, <span class="dt">sd =</span> <span class="dv">6</span>)</a>
-<a class="sourceLine" id="cb2-4" title="4">theta_<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw">maxlogL</span>(<span class="dt">x =</span> x, <span class="dt">dist =</span> <span class="st">&#39;dnorm&#39;</span>, <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">trace =</span> <span class="dv">1</span>),</a>
-<a class="sourceLine" id="cb2-5" title="5">                   <span class="dt">link =</span> <span class="kw">list</span>(<span class="dt">over =</span> <span class="st">&quot;sd&quot;</span>, <span class="dt">fun =</span> <span class="st">&quot;log_link&quot;</span>),</a>
-<a class="sourceLine" id="cb2-6" title="6">                   <span class="dt">fixed =</span> <span class="kw">list</span>(<span class="dt">mean =</span> <span class="dv">160</span>))</a>
-<a class="sourceLine" id="cb2-7" title="7"><span class="co">#&gt;   0:     43659.276:  1.00000</span></a>
-<a class="sourceLine" id="cb2-8" title="8"><span class="co">#&gt;   1:     32501.025:  2.00000</span></a>
-<a class="sourceLine" id="cb2-9" title="9"><span class="co">#&gt;   2:     32276.138:  1.92023</span></a>
-<a class="sourceLine" id="cb2-10" title="10"><span class="co">#&gt;   3:     32138.153:  1.76473</span></a>
-<a class="sourceLine" id="cb2-11" title="11"><span class="co">#&gt;   4:     32129.558:  1.79781</span></a>
-<a class="sourceLine" id="cb2-12" title="12"><span class="co">#&gt;   5:     32129.413:  1.79411</span></a>
-<a class="sourceLine" id="cb2-13" title="13"><span class="co">#&gt;   6:     32129.413:  1.79400</span></a>
-<a class="sourceLine" id="cb2-14" title="14"><span class="co">#&gt;   7:     32129.413:  1.79400</span></a>
-<a class="sourceLine" id="cb2-15" title="15"><span class="kw">summary</span>(theta_<span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb2-16" title="16"><span class="co">#&gt; ---------------------------------------------------------------</span></a>
-<a class="sourceLine" id="cb2-17" title="17"><span class="co">#&gt; Optimization routine: nlminb </span></a>
-<a class="sourceLine" id="cb2-18" title="18"><span class="co">#&gt; Standard Error calculation: Hessian from optim </span></a>
-<a class="sourceLine" id="cb2-19" title="19"><span class="co">#&gt; ---------------------------------------------------------------</span></a>
-<a class="sourceLine" id="cb2-20" title="20"><span class="co">#&gt;        AIC      BIC</span></a>
-<a class="sourceLine" id="cb2-21" title="21"><span class="co">#&gt;   64258.83 64258.83</span></a>
-<a class="sourceLine" id="cb2-22" title="22"><span class="co">#&gt; ---------------------------------------------------------------</span></a>
-<a class="sourceLine" id="cb2-23" title="23"><span class="co">#&gt;    Estimate  Std. Error</span></a>
-<a class="sourceLine" id="cb2-24" title="24"><span class="co">#&gt; sd    6.0135     0.0425</span></a>
-<a class="sourceLine" id="cb2-25" title="25"><span class="co">#&gt; -----</span></a>
-<a class="sourceLine" id="cb2-26" title="26"></a>
-<a class="sourceLine" id="cb2-27" title="27"><span class="co">## Hessian </span></a>
-<a class="sourceLine" id="cb2-28" title="28"><span class="kw">print</span>(theta_<span class="dv">1</span><span class="op">$</span>fit<span class="op">$</span>hessian)</a>
-<a class="sourceLine" id="cb2-29" title="29"><span class="co">#&gt;          [,1]</span></a>
-<a class="sourceLine" id="cb2-30" title="30"><span class="co">#&gt; [1,] 553.0687</span></a>
-<a class="sourceLine" id="cb2-31" title="31"></a>
-<a class="sourceLine" id="cb2-32" title="32"><span class="co">## Standard errors</span></a>
-<a class="sourceLine" id="cb2-33" title="33"><span class="kw">print</span>(theta_<span class="dv">1</span><span class="op">$</span>outputs<span class="op">$</span>StdE)</a>
-<a class="sourceLine" id="cb2-34" title="34"><span class="co">#&gt; [1] 0.0425</span></a>
-<a class="sourceLine" id="cb2-35" title="35"><span class="kw">print</span>(theta_<span class="dv">1</span><span class="op">$</span>outputs<span class="op">$</span>StdE_Method)</a>
-<a class="sourceLine" id="cb2-36" title="36"><span class="co">#&gt; [1] &quot;Hessian from optim&quot;</span></a></code></pre></div>
-<p>Note that Hessian matrix was computed with no issues. However, the user can implement bootstrap alogorithm available in <code>summary</code> function:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">summary</span>(theta_<span class="dv">1</span>, <span class="dt">Boot_Std_Err =</span> <span class="ot">TRUE</span>, <span class="dt">R =</span> <span class="dv">1000</span>)</a>
-<a class="sourceLine" id="cb3-2" title="2"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb3-3" title="3"><span class="co">#&gt; ...Bootstrap computation of Standard Error. Please, wait a few minutes...</span></a>
-<a class="sourceLine" id="cb3-4" title="4"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb3-5" title="5"><span class="co">#&gt; ---------------------------------------------------------------</span></a>
-<a class="sourceLine" id="cb3-6" title="6"><span class="co">#&gt; Optimization routine: nlminb </span></a>
-<a class="sourceLine" id="cb3-7" title="7"><span class="co">#&gt; Standard Error calculation: Bootstrap </span></a>
-<a class="sourceLine" id="cb3-8" title="8"><span class="co">#&gt; ---------------------------------------------------------------</span></a>
-<a class="sourceLine" id="cb3-9" title="9"><span class="co">#&gt;        AIC      BIC</span></a>
-<a class="sourceLine" id="cb3-10" title="10"><span class="co">#&gt;   64258.83 64258.83</span></a>
-<a class="sourceLine" id="cb3-11" title="11"><span class="co">#&gt; ---------------------------------------------------------------</span></a>
-<a class="sourceLine" id="cb3-12" title="12"><span class="co">#&gt;    Estimate  Std. Error</span></a>
-<a class="sourceLine" id="cb3-13" title="13"><span class="co">#&gt; sd    6.0135     0.0436</span></a>
-<a class="sourceLine" id="cb3-14" title="14"><span class="co">#&gt; -----</span></a>
-<a class="sourceLine" id="cb3-15" title="15"></a>
-<a class="sourceLine" id="cb3-16" title="16"><span class="co">## Hessian </span></a>
-<a class="sourceLine" id="cb3-17" title="17"><span class="kw">print</span>(theta_<span class="dv">1</span><span class="op">$</span>fit<span class="op">$</span>hessian)</a>
-<a class="sourceLine" id="cb3-18" title="18"><span class="co">#&gt;          [,1]</span></a>
-<a class="sourceLine" id="cb3-19" title="19"><span class="co">#&gt; [1,] 553.0687</span></a>
-<a class="sourceLine" id="cb3-20" title="20"></a>
-<a class="sourceLine" id="cb3-21" title="21"><span class="co">## Standard errors</span></a>
-<a class="sourceLine" id="cb3-22" title="22"><span class="kw">print</span>(theta_<span class="dv">1</span><span class="op">$</span>outputs<span class="op">$</span>StdE)</a>
-<a class="sourceLine" id="cb3-23" title="23"><span class="co">#&gt; [1] 0.04357992</span></a>
-<a class="sourceLine" id="cb3-24" title="24"><span class="kw">print</span>(theta_<span class="dv">1</span><span class="op">$</span>outputs<span class="op">$</span>StdE_Method)</a>
-<a class="sourceLine" id="cb3-25" title="25"><span class="co">#&gt; [1] &quot;Bootstrap&quot;</span></a></code></pre></div>
-<p>Notice that Standard Errors calculated with <code>optim</code> (<span class="math inline">\(0.0425\)</span>) and those calculated with bootstrap implementation (<span class="math inline">\(0.04358\)</span>) are approximately equals, but no identical.</p>
+<p>Additionally, <strong>EstimationTools</strong> allows implementation of bootstrap for standard error estimation, even if the Hessian computation does not fail.</p>
+</div>
+<div id="standard-error-with-maxlogl-function" class="section level2">
+<h2>Standard Error with <code>maxlogL</code> function</h2>
+<p>Lets fit the following distribution:</p>
+<p><span class="math display">\[
+\begin{aligned}
+X &amp;\sim N(\mu, \:\sigma^2) \\
+\mu &amp;= 160 \quad (\verb|mean|) \\
+\sigma &amp;= 6 \quad (\verb|sd|)
+\end{aligned}
+\]</span></p>
+<p>The following chunk illustrates the fitting with Hessian computation via <code>optim</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(EstimationTools)</span>
+<span id="cb2-2"><a href="#cb2-2"></a></span>
+<span id="cb2-3"><a href="#cb2-3"></a>x &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dt">n =</span> <span class="dv">10000</span>, <span class="dt">mean =</span> <span class="dv">160</span>, <span class="dt">sd =</span> <span class="dv">6</span>)</span>
+<span id="cb2-4"><a href="#cb2-4"></a>theta_<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw">maxlogL</span>(<span class="dt">x =</span> x, <span class="dt">dist =</span> <span class="st">&#39;dnorm&#39;</span>, <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">trace =</span> <span class="dv">1</span>),</span>
+<span id="cb2-5"><a href="#cb2-5"></a>                   <span class="dt">link =</span> <span class="kw">list</span>(<span class="dt">over =</span> <span class="st">&quot;sd&quot;</span>, <span class="dt">fun =</span> <span class="st">&quot;log_link&quot;</span>),</span>
+<span id="cb2-6"><a href="#cb2-6"></a>                   <span class="dt">fixed =</span> <span class="kw">list</span>(<span class="dt">mean =</span> <span class="dv">160</span>))</span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt;   0:     43081.027:  1.00000</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt;   1:     32422.767:  2.00000</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt;   2:     32170.782:  1.91451</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt;   3:     32020.763:  1.74935</span></span>
+<span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt;   4:     32010.038:  1.78651</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt;   5:     32009.839:  1.78219</span></span>
+<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt;   6:     32009.839:  1.78204</span></span>
+<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#&gt;   7:     32009.839:  1.78205</span></span>
+<span id="cb2-15"><a href="#cb2-15"></a><span class="kw">summary</span>(theta_<span class="dv">1</span>)</span>
+<span id="cb2-16"><a href="#cb2-16"></a><span class="co">#&gt; _______________________________________________________________</span></span>
+<span id="cb2-17"><a href="#cb2-17"></a><span class="co">#&gt; Optimization routine: nlminb </span></span>
+<span id="cb2-18"><a href="#cb2-18"></a><span class="co">#&gt; Standard Error calculation: Hessian from optim </span></span>
+<span id="cb2-19"><a href="#cb2-19"></a><span class="co">#&gt; _______________________________________________________________</span></span>
+<span id="cb2-20"><a href="#cb2-20"></a><span class="co">#&gt;        AIC      BIC</span></span>
+<span id="cb2-21"><a href="#cb2-21"></a><span class="co">#&gt;   64019.68 64019.68</span></span>
+<span id="cb2-22"><a href="#cb2-22"></a><span class="co">#&gt; _______________________________________________________________</span></span>
+<span id="cb2-23"><a href="#cb2-23"></a><span class="co">#&gt;    Estimate  Std. Error Z value Pr(&gt;|z|)    </span></span>
+<span id="cb2-24"><a href="#cb2-24"></a><span class="co">#&gt; sd   5.94200    0.04202   141.4   &lt;2e-16 ***</span></span>
+<span id="cb2-25"><a href="#cb2-25"></a><span class="co">#&gt; ---</span></span>
+<span id="cb2-26"><a href="#cb2-26"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span>
+<span id="cb2-27"><a href="#cb2-27"></a><span class="co">#&gt; _______________________________________________________________</span></span>
+<span id="cb2-28"><a href="#cb2-28"></a><span class="co">#&gt; Note: p-values valid under asymptotic normality of estimators </span></span>
+<span id="cb2-29"><a href="#cb2-29"></a><span class="co">#&gt; ---</span></span>
+<span id="cb2-30"><a href="#cb2-30"></a></span>
+<span id="cb2-31"><a href="#cb2-31"></a><span class="co">## Hessian</span></span>
+<span id="cb2-32"><a href="#cb2-32"></a><span class="kw">print</span>(theta_<span class="dv">1</span><span class="op">$</span>fit<span class="op">$</span>hessian)</span>
+<span id="cb2-33"><a href="#cb2-33"></a><span class="co">#&gt;          [,1]</span></span>
+<span id="cb2-34"><a href="#cb2-34"></a><span class="co">#&gt; [1,] 566.4547</span></span>
+<span id="cb2-35"><a href="#cb2-35"></a></span>
+<span id="cb2-36"><a href="#cb2-36"></a><span class="co">## Standard errors</span></span>
+<span id="cb2-37"><a href="#cb2-37"></a><span class="kw">print</span>(theta_<span class="dv">1</span><span class="op">$</span>fit<span class="op">$</span>StdE)</span>
+<span id="cb2-38"><a href="#cb2-38"></a><span class="co">#&gt; [1] 0.04201626</span></span>
+<span id="cb2-39"><a href="#cb2-39"></a><span class="kw">print</span>(theta_<span class="dv">1</span><span class="op">$</span>outputs<span class="op">$</span>StdE_Method)</span>
+<span id="cb2-40"><a href="#cb2-40"></a><span class="co">#&gt; [1] &quot;Hessian from optim&quot;</span></span></code></pre></div>
+<p>Note that Hessian was computed with no issues. Now, lets check the aforementioned feature in <code>maxlogL</code>: the user can implement bootstrap algorithm available in <code>bootstrap_maxlogL</code> function. To illustrate this, we are going to create another object <code>theta_2</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="co"># Bootstrap</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>theta_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">maxlogL</span>(<span class="dt">x =</span> x, <span class="dt">dist =</span> <span class="st">&#39;dnorm&#39;</span>, <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">trace =</span> <span class="dv">1</span>),</span>
+<span id="cb3-3"><a href="#cb3-3"></a>                   <span class="dt">link =</span> <span class="kw">list</span>(<span class="dt">over =</span> <span class="st">&quot;sd&quot;</span>, <span class="dt">fun =</span> <span class="st">&quot;log_link&quot;</span>),</span>
+<span id="cb3-4"><a href="#cb3-4"></a>                   <span class="dt">fixed =</span> <span class="kw">list</span>(<span class="dt">mean =</span> <span class="dv">160</span>))</span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt;   0:     43081.027:  1.00000</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="co">#&gt;   1:     32422.767:  2.00000</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="co">#&gt;   2:     32170.782:  1.91451</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="co">#&gt;   3:     32020.763:  1.74935</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a><span class="co">#&gt;   4:     32010.038:  1.78651</span></span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="co">#&gt;   5:     32009.839:  1.78219</span></span>
+<span id="cb3-11"><a href="#cb3-11"></a><span class="co">#&gt;   6:     32009.839:  1.78204</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a><span class="co">#&gt;   7:     32009.839:  1.78205</span></span>
+<span id="cb3-13"><a href="#cb3-13"></a><span class="kw">bootstrap_maxlogL</span>(theta_<span class="dv">2</span>, <span class="dt">R =</span> <span class="dv">200</span>)</span>
+<span id="cb3-14"><a href="#cb3-14"></a><span class="co">#&gt; </span></span>
+<span id="cb3-15"><a href="#cb3-15"></a><span class="co">#&gt; ...Bootstrap computation of Standard Error. Please, wait a few minutes...</span></span>
+<span id="cb3-16"><a href="#cb3-16"></a><span class="co">#&gt; </span></span>
+<span id="cb3-17"><a href="#cb3-17"></a><span class="co">#&gt; </span></span>
+<span id="cb3-18"><a href="#cb3-18"></a><span class="co">#&gt;  --&gt; Done &lt;---</span></span>
+<span id="cb3-19"><a href="#cb3-19"></a><span class="kw">summary</span>(theta_<span class="dv">2</span>)</span>
+<span id="cb3-20"><a href="#cb3-20"></a><span class="co">#&gt; _______________________________________________________________</span></span>
+<span id="cb3-21"><a href="#cb3-21"></a><span class="co">#&gt; Optimization routine: nlminb </span></span>
+<span id="cb3-22"><a href="#cb3-22"></a><span class="co">#&gt; Standard Error calculation: Bootstrap </span></span>
+<span id="cb3-23"><a href="#cb3-23"></a><span class="co">#&gt; _______________________________________________________________</span></span>
+<span id="cb3-24"><a href="#cb3-24"></a><span class="co">#&gt;        AIC      BIC</span></span>
+<span id="cb3-25"><a href="#cb3-25"></a><span class="co">#&gt;   64019.68 64019.68</span></span>
+<span id="cb3-26"><a href="#cb3-26"></a><span class="co">#&gt; _______________________________________________________________</span></span>
+<span id="cb3-27"><a href="#cb3-27"></a><span class="co">#&gt;    Estimate  Std. Error Z value Pr(&gt;|z|)    </span></span>
+<span id="cb3-28"><a href="#cb3-28"></a><span class="co">#&gt; sd   5.94200    0.04478   132.7   &lt;2e-16 ***</span></span>
+<span id="cb3-29"><a href="#cb3-29"></a><span class="co">#&gt; ---</span></span>
+<span id="cb3-30"><a href="#cb3-30"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span>
+<span id="cb3-31"><a href="#cb3-31"></a><span class="co">#&gt; _______________________________________________________________</span></span>
+<span id="cb3-32"><a href="#cb3-32"></a><span class="co">#&gt; Note: p-values valid under asymptotic normality of estimators </span></span>
+<span id="cb3-33"><a href="#cb3-33"></a><span class="co">#&gt; ---</span></span>
+<span id="cb3-34"><a href="#cb3-34"></a></span>
+<span id="cb3-35"><a href="#cb3-35"></a><span class="co">## Hessian</span></span>
+<span id="cb3-36"><a href="#cb3-36"></a><span class="kw">print</span>(theta_<span class="dv">2</span><span class="op">$</span>fit<span class="op">$</span>hessian)</span>
+<span id="cb3-37"><a href="#cb3-37"></a><span class="co">#&gt;          [,1]</span></span>
+<span id="cb3-38"><a href="#cb3-38"></a><span class="co">#&gt; [1,] 566.4547</span></span>
+<span id="cb3-39"><a href="#cb3-39"></a></span>
+<span id="cb3-40"><a href="#cb3-40"></a><span class="co">## Standard errors</span></span>
+<span id="cb3-41"><a href="#cb3-41"></a><span class="kw">print</span>(theta_<span class="dv">2</span><span class="op">$</span>fit<span class="op">$</span>StdE)</span>
+<span id="cb3-42"><a href="#cb3-42"></a><span class="co">#&gt; [1] 0.04478343</span></span>
+<span id="cb3-43"><a href="#cb3-43"></a><span class="kw">print</span>(theta_<span class="dv">2</span><span class="op">$</span>outputs<span class="op">$</span>StdE_Method)</span>
+<span id="cb3-44"><a href="#cb3-44"></a><span class="co">#&gt; [1] &quot;Bootstrap&quot;</span></span></code></pre></div>
+<p>Notice that Standard Errors calculated with <code>optim</code> (<span class="math inline">\(0.042016\)</span>) and those calculated with bootstrap implementation (<span class="math inline">\(0.044783\)</span>) are approximately equals, but no identical.</p>
 </div>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

@@ -4,16 +4,26 @@
 \alias{maxlogL}
 \title{Maximum Likelihood Estimation for parametric distributions}
 \usage{
-maxlogL(x, dist = "dnorm", fixed = NULL, link = NULL, start = NULL,
-  lower = NULL, upper = NULL, optimizer = "nlminb", control = NULL,
-  ...)
+maxlogL(
+  x,
+  dist = "dnorm",
+  fixed = NULL,
+  link = NULL,
+  start = NULL,
+  lower = NULL,
+  upper = NULL,
+  optimizer = "nlminb",
+  control = NULL,
+  silent = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{a vector with data to be fitted. This argument must be a matrix
 with hierarchical distributions.}
 
 \item{dist}{a length-one character vector with the name of density/mass function
-of interest. The default value is "dnorm", to compute maximum likelihood
+of interest. The default value is \code{'dnorm'}, to compute maximum likelihood
 estimators of normal distribution.}
 
 \item{fixed}{a list with fixed/known parameters of distribution of interest.
@@ -26,11 +36,11 @@ function. There are three link functions available: \code{\link{log_link}},
 
 \item{start}{a numeric vector with initial values for the parameters to be estimated.}
 
-\item{lower}{a numeric vector with lower bounds, with the same lenght of argument
-`start` (for box-constrained optimization).}
+\item{lower}{a numeric vector with lower bounds, with the same length of argument
+\code{start} (for box-constrained optimization).}
 
-\item{upper}{a numeric vector with upper bounds, with the same lenght of argument
-`start` (for box-constrained optimization).}
+\item{upper}{a numeric vector with upper bounds, with the same length of argument
+\code{start} (for box-constrained optimization).}
 
 \item{optimizer}{a lenght-one character vector with the name of optimization routine.
 \code{\link{nlminb}}, \code{\link{optim}} and
@@ -40,19 +50,20 @@ is the default routine.}
 \item{control}{control parameters of the optimization routine. Please, visit documentation of selected
 optimizer for further information.}
 
-\item{...}{Further arguments to be supplied to the optimizer.}
+\item{silent}{logical. If TRUE, warnings of \code{maxlogL} are suppressed.}
+
+\item{...}{further arguments to be supplied to the optimizer.}
 }
 \value{
-A list with class \code{"maxlogL"} containing the following
- lists:
-\item{fit}{A list with output information about estimation and method used.}
+A list with class \code{"maxlogL"} containing the following lists:
+\item{fit}{A list with output information about estimation.}
 \item{inputs}{A list with all input arguments.}
 \item{outputs}{A list with some output additional information:
-      \itemize{
-         \item Number of parameters.
-         \item Sample size
-         \item Standard error computation method.
-       }
+\itemize{
+\item Number of parameters.
+\item Sample size
+\item Standard error computation method.
+}
 }
 }
 \description{
@@ -60,18 +71,22 @@ Function to compute maximum likelihood estimators (MLE)
 of any distribution implemented in \code{R}.
 }
 \details{
-\code{maxlogL} calculates computationally the likelihood function corresponding to
+\code{maxlogL} computes the likelihood function corresponding to
 the distribution specified in argument \code{dist} and maximizes it through
 \code{\link{optim}}, \code{\link{nlminb}} or \code{\link{DEoptim}}. \code{maxlogL}
 generates an S3 object of class \code{maxlogL}.
+
+Noncentrality parameters must be named as \code{ncp} in the distribution.
 }
 \note{
 The following generic functions can be used with a \code{maxlogL} object:
-\code{summary}
+\code{summary, print, AIC, BIC, logLik}.
 }
 \examples{
+library(EstimationTools)
+
 #--------------------------------------------------------------------------------
-# Estimation with one fixed parameter
+# Example 1: estimation with one fixed parameter
 x <- rnorm(n = 10000, mean = 160, sd = 6)
 theta_1 <- maxlogL(x = x, dist = 'dnorm', control = list(trace = 1),
                  link = list(over = "sd", fun = "log_link"),
@@ -80,22 +95,39 @@ summary(theta_1)
 
 
 #--------------------------------------------------------------------------------
-# Both parameters of normal distribution mapped with logarithmic function
-theta_2 <- maxlogL( x = x, dist = "dnorm",
-                    link = list(over = c("mean","sd"),
-                                fun = c("log_link","log_link")) )
+# Example 2: both parameters of normal distribution mapped with logarithmic
+# function
+theta_2 <- maxlogL(x = x, dist = "dnorm",
+                   link = list(over = c("mean","sd"),
+                               fun = c("log_link","log_link")))
 summary(theta_2)
 
 
 #--------------------------------------------------------------------------------
-# Parameter estimation in ZIP distribution
+# Example 3: parameter estimation in ZIP distribution
+if (!require('gamlss.dist')) install.packages('gamlss.dist')
 library(gamlss.dist)
-z <- rZIP(n=10000, mu=6, sigma=0.08)
-theta_3  <- maxlogL( x = z, dist='dZIP', start = c(0, 0), lower = c(-Inf, -Inf),
-                     upper = c(Inf, Inf), optimizer = 'optim',
-                     link = list(over=c("mu", "sigma"),
-                     fun = c("log_link", "logit_link")) )
+z <- rZIP(n=1000, mu=6, sigma=0.08)
+theta_3  <- maxlogL(x = z, dist='dZIP', start = c(0, 0), lower = c(-Inf, -Inf),
+                   upper = c(Inf, Inf), optimizer = 'optim',
+                   link = list(over=c("mu", "sigma"),
+                   fun = c("log_link", "logit_link")))
 summary(theta_3)
+
+
+#--------------------------------------------------------------------------------
+# Example 4: parameter estimation with fixed noncentrality parameter.
+y_2 <- rbeta(n = 1000, shape1 = 2, shape2 = 3)
+theta_41 <- maxlogL(x = y_2, dist = "dbeta",
+                    link = list(over = c("shape1", "shape2"),
+                    fun = c("log_link","log_link")))
+summary(theta_41)
+
+# It is also possible define 'ncp' as fixed parameter
+theta_42 <- maxlogL(x = y_2, dist = "dbeta", fixed = list(ncp = 0),
+                    link = list(over = c("shape1", "shape2"),
+                    fun = c("log_link","log_link")) )
+summary(theta_42)
 
 
 #--------------------------------------------------------------------------------
@@ -112,8 +144,13 @@ summary(theta_3)
 }
 \seealso{
 \code{\link{summary.maxlogL}}, \code{\link{optim}}, \code{\link{nlminb}},
-         \code{\link{DEoptim}}, \code{\link{DEoptim.control}}
+\code{\link{DEoptim}}, \code{\link{DEoptim.control}},
+\code{\link{maxlogLreg}}, \code{\link{bootstrap_maxlogL}}
+
+Other maxlogL: 
+\code{\link{maxlogLreg}()}
 }
 \author{
 Jaime Mosquera Gutiérrez, \email{jmosquerag@unal.edu.co}
 }
+\concept{maxlogL}

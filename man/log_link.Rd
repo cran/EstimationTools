@@ -2,7 +2,7 @@
 % Please edit documentation in R/LinkFunc.R
 \name{log_link}
 \alias{log_link}
-\title{Logarithmic link function (for estimation with \code{maxlogL})}
+\title{Logarithmic link function (for estimation with \code{maxlogL} object)}
 \usage{
 log_link()
 }
@@ -19,10 +19,10 @@ of link objects.
 \code{log_link} is part of a family of generic functions with no input arguments that
 defines and returns a list with details of the link function:
 \enumerate{
-   \item \code{name}: a character string with the name of the link function.
-   \item \code{g}: implementation of the link function as a generic function in \code{R}.
-   \item \code{g_inv}: implementation of the inverse link function as a generic function
-         in \code{R}.
+\item \code{name}: a character string with the name of the link function.
+\item \code{g}: implementation of the link function as a generic function in \code{R}.
+\item \code{g_inv}: implementation of the inverse link function as a generic function
+in \code{R}.
 }
 
 There is a way to add new mapping functions. The user must specify the details aforesaid.
@@ -50,7 +50,8 @@ curve(ginv(x), from = -5, to = 5)
 \seealso{
 \code{\link{maxlogL}}
 
-Other link functions: \code{\link{NegInv_link}},
-  \code{\link{logit_link}}
+Other link functions: 
+\code{\link{NegInv_link}()},
+\code{\link{logit_link}()}
 }
 \concept{link functions}
