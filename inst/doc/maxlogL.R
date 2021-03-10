@@ -304,7 +304,7 @@ legend("bottomleft", legend=c("Kaplan-Meier estimator","PL survival function"),
 
 
 ###################################################
-### code chunk number 20: maxlogL.Rnw:604-612
+### code chunk number 20: maxlogL.Rnw:605-613
 ###################################################
 # Power model implementation
 power_logL <- function(x, a, b, log = FALSE){
@@ -317,7 +317,7 @@ power_logL <- function(x, a, b, log = FALSE){
 
 
 ###################################################
-### code chunk number 21: maxlogL.Rnw:617-628
+### code chunk number 21: maxlogL.Rnw:618-629
 ###################################################
 # Power model estimation
 m <- 100 # Independent trials
@@ -333,7 +333,7 @@ summary(retention.pwr)
 
 
 ###################################################
-### code chunk number 22: maxlogL.Rnw:637-657
+### code chunk number 22: maxlogL.Rnw:638-658
 ###################################################
 # Exponential model implementation
 exp_logL <- function(x, a, b, log = FALSE){

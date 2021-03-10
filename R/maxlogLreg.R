@@ -1,6 +1,7 @@
 #' @title Maximum Likelihood Estimation for parametric linear regression models
 #' @family maxlogL
 #'
+#' @encoding UTF-8
 #' @author Jaime Mosquera Gutiérrez, \email{jmosquerag@unal.edu.co}
 #'
 #' @description
@@ -77,7 +78,7 @@
 #' library(EstimationTools)
 #'
 #' #--------------------------------------------------------------------------------
-#' # First example: Estimation in simulated normal distribution
+#' # Example 1: Estimation in simulated normal distribution
 #' n <- 1000
 #' x <- runif(n = n, -5, 6)
 #' y <- rnorm(n = n, mean = -2 + 3 * x, sd = exp(1 + 0.3* x))
@@ -92,10 +93,10 @@
 #'
 #'
 #' #--------------------------------------------------------------------------------
-#' # Second example: Fitting with censorship
+#' # Example 2: Fitting with censorship
 #' # (data from https://www.itl.nist.gov/div898/handbook/apr/section4/apr413.htm)
 #'
-#' failures = c(55, 187, 216, 240, 244, 335, 361, 373, 375, 386)
+#' failures <- c(55, 187, 216, 240, 244, 335, 361, 373, 375, 386)
 #' fails <- c(failures, rep(500, 10))
 #' status <- c(rep(1, length(failures)), rep(0, 10))
 #' Wei_data <- data.frame(fails = fails, status = status)
@@ -253,6 +254,7 @@ maxlogLreg <- function(formulas, y_dist, data = NULL, subset = NULL,
   dsgn_mat <- model.matrix.MLreg(formulas = formulas, data = data,
                                  y_dist = y_dist, npar = npar,
                                  par_names = par_names)
+  levels <- dsgn_mat$levels
 
   ## Number of regression parameters
   n_betas <- sum(as.numeric(unlist(sapply(dsgn_mat[1:npar], ncol))))
@@ -360,17 +362,37 @@ maxlogLreg <- function(formulas, y_dist, data = NULL, subset = NULL,
     fit$StdE <- sqrt(diag(solve(fit$hessian)))
   }
 
+  # Linear predictors computation
+  betas_list <- all_betas(b_length = b_length, npar = npar,
+                          param = fit$par)
+  linear.predictors <- lapply(X = 1:npar, FUN = LinPred,
+                              betas = betas_list, mat = dsgn_mat[1:npar])
+  names(linear.predictors) <- par_names
+
+  # Fitted values computation
+  fitted.values <- link_apply(values = linear.predictors, over = link$over,
+                              dist_args = arguments, npar = npar,
+                              link_fun = link$fun)
+  names(fitted.values) <- par_names
+
+  # Coefficients of predictors
+  A <- param_index(b_length, npar)
+  coefficients <- lapply(1:length(par_names), function(i) fit$par[A[i,1]:A[i,2]])
+  names(coefficients) <- par_names
+
   # fit stores the following information:
   # fit <- list(par, objective, hessian, StdE)
   inputs <- list(call = call, distr = distr, y_dist = y_dist,
                  formulas = formulas, fixed = fixed, link = link,
                  start = start, lower = lower, upper = upper,
-                 optimizer = optimizer, data = dsgn_mat$data_reg)
+                 optimizer = optimizer, data = dsgn_mat$data)
   outputs <- list(npar = npar - length(fixed), n = length(dsgn_mat$y),
                   StdE_Method = StdE_Method, type = "maxlogLreg",
-                  b_length = b_length,
+                  b_length = b_length, levels = levels,
                   par_names = par_names, response = dsgn_mat$y,
-                  design_matrix = dsgn_mat)
+                  design_matrix = dsgn_mat,
+                  linear.predictors = linear.predictors,
+                  fitted.values = fitted.values, coef = coefficients)
   result <- list(fit = fit, inputs = inputs, outputs = outputs)
   class(result) <- "maxlogL"
   if (silent) options(warn = 0)
@@ -460,8 +482,8 @@ model.matrix.MLreg <- function(formulas, data, y_dist, npar, par_names){
   nfos <- length(formulas)
 
   if (nfos != npar) stop(paste0("Distribution defined for response ",
-                                 "variable has ", npar, " parameters. ",
-                                 "Each parameter must have its own formula"))
+                                "variable has ", npar, " parameters. ",
+                                "Each parameter must have its own formula"))
 
   # Response variable
   if ( !inherits(y_dist, "formula") ) stop(paste0("Expression in 'y_dist' ",
@@ -470,6 +492,7 @@ model.matrix.MLreg <- function(formulas, data, y_dist, npar, par_names){
                                          "must be a formula of the form ",
                                          "'response ~ distribution' or ",
                                          "'Surv(response, status) ~ distribution'"))
+
   Y <- all.vars(y_dist)[1] #Surv_transform(y_dist = y_dist)
 
   # Extract the right side of formulas
@@ -482,14 +505,24 @@ model.matrix.MLreg <- function(formulas, data, y_dist, npar, par_names){
   fos_mat <- lapply(fos_mat_char, as.formula)
   list_mfs <- lapply(fos_mat, model.frame, data = data)
   if ( is.null(data) ){
-    data_reg <- as.data.frame(list_mfs)
+    data_temp <- as.data.frame(list_mfs)
     var_names <- as.character(unlist(sapply(list_mfs, names)))
-    names(data_reg) <- var_names
-    data_reg <- as.data.frame(data_reg[,unique(var_names)])
-    names(data_reg) <- unique(var_names)
-    data <- data_reg
+    names(data_temp) <- var_names
+    col_names <- unique(var_names)
+    data_temp <- as.data.frame(data_temp[, col_names])
+    names(data_temp) <- col_names
+    data <- data_temp
   }
+
+  levels <- NULL
+  original_data <- data
+  data_reg <- data
   response <- model.frame(fos_mat[[1]], data = data)[, 1]
+  if ( is.character(response) | is.factor(response) ){
+    eval(substitute(data$res <- as.integer(data$res) - 1, list(res = Y)))
+    levels <- levels(response)
+    data_reg <- data
+  }
 
   # Censorship status
   cens <- Surv_transform(y_dist = y_dist, data = data)
@@ -501,7 +534,9 @@ model.matrix.MLreg <- function(formulas, data, y_dist, npar, par_names){
   names(mtrxs) <- names(fos_mat)
   mtrxs$y <- response
   mtrxs$status <- cens[,2:ncol(cens)]
-  mtrxs$data_reg <- data
+  mtrxs$data_reg <- data_reg
+  mtrxs$data <- original_data
+  mtrxs$levels <- levels
   return(mtrxs)
 }
 fos_bind <- function(formula, response){
@@ -528,13 +563,13 @@ Surv_transform <- function(y_dist, data){
       right <- ifelse(SurvObject[,2] == 0, 1, 0)
       # yvar <- all.vars(y_dist)[1]
     }
-  } else if ( class(SurvObject) == "numeric" ){
+  } else if ( is.numeric(SurvObject) ){
     y <- SurvObject
     obs <- rep(1, length(y))
     left <- right <- rep(0, length(y))
     # yvar <- all.vars(y_dist)[1]
   } else {
-    stop("Response variable must be of class 'numeric' or a 'Surv' object")
+    stop("Response variable must be of class, 'numeric', 'factor' or a Surv' object")
   }
   status <- c(obs, left, right)
   cens_data <- matrix(c(y,status), nrow = length(y))
@@ -564,7 +599,7 @@ minus_lL_LinReg <- function(param, mat, distr, dist_args, over, link, npar,
           g_inv <- paste0("link_eval[[", i, "]]$g_inv")
           g_inv <- eval(parse(text=g_inv))
           param[[linked_params[i]]] <- do.call( what = "g_inv",
-                                                args = list(x = param[[linked_params[i]]]) )
+                                                args = list(eta = param[[linked_params[i]]]) )
         }
       }
     }
@@ -619,40 +654,40 @@ all_betas <- function(b_length, npar, param){
 LinPred <- function(j, betas, mat){
   mat[[j]] %*% betas[[j]]
 }
-link_list <- function(over, dist_args, npar){
-  if ( is.null(over) ){
-    return(linked_params = NULL)
-  } else {
-    if ( length(over) > npar ) stop(paste0("Number of mapped parameters is ",
-                                           "greater than the number of parameters ",
-                                           "of the distribution.\n Remember, ",
-                                           "npar >= over"))
-    numeric_list <- vector(mode = "list", length = npar + 1)
-    names_numeric <- rep("", times = npar + 1)
-    j <- 1
-    for ( i in 1:length(dist_args) ){
-      if (is.numeric(dist_args[[i]]) | is.symbol(dist_args[[i]])){
-        numeric_list[[j]]<- dist_args[[i]]
-        names_numeric[j] <- names(dist_args[i])
-        j <- j + 1
-      }
-    }
-    numeric_list[which(names_numeric == "x")] <- NULL
-    names_numeric <- names_numeric[-which(names_numeric == "x")]
-    names(numeric_list) <- names_numeric
-
-    args_names <- names(dist_args)
-    mapped_param <- match(over, args_names)
-
-    linked_args <- vector(mode = "list", length = length(over))
-    names_linked <- rep("", times = length(over))
-    for ( i in 1:length(mapped_param) ){
-      linked_args[i] <- dist_args[mapped_param[i]]
-      names_linked[i] <- names(dist_args[mapped_param[i]])
-    }
-    names(linked_args) <- names_linked
-
-    linked_params <- match(names_linked, names_numeric)
-    return(linked_params)
-  }
-}
+# link_list <- function(over, dist_args, npar){
+#   if ( is.null(over) ){
+#     return(linked_params = NULL)
+#   } else {
+#     if ( length(over) > npar ) stop(paste0("Number of mapped parameters is ",
+#                                            "greater than the number of parameters ",
+#                                            "of the distribution.\n Remember, ",
+#                                            "npar >= over"))
+#     numeric_list <- vector(mode = "list", length = npar + 1)
+#     names_numeric <- rep("", times = npar + 1)
+#     j <- 1
+#     for ( i in 1:length(dist_args) ){
+#       if (is.numeric(dist_args[[i]]) | is.symbol(dist_args[[i]])){
+#         numeric_list[[j]]<- dist_args[[i]]
+#         names_numeric[j] <- names(dist_args[i])
+#         j <- j + 1
+#       }
+#     }
+#     numeric_list[which(names_numeric == "x")] <- NULL
+#     names_numeric <- names_numeric[-which(names_numeric == "x")]
+#     names(numeric_list) <- names_numeric
+#
+#     args_names <- names(dist_args)
+#     mapped_param <- match(over, args_names)
+#
+#     linked_args <- vector(mode = "list", length = length(over))
+#     names_linked <- rep("", times = length(over))
+#     for ( i in 1:length(mapped_param) ){
+#       linked_args[i] <- dist_args[mapped_param[i]]
+#       names_linked[i] <- names(dist_args[mapped_param[i]])
+#     }
+#     names(linked_args) <- names_linked
+#
+#     linked_params <- match(names_linked, names_numeric)
+#     return(linked_params)
+#   }
+# }
