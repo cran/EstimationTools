@@ -1,6 +1,8 @@
-#' Summary of \code{HazardShape} objects
+#' Hazard shape extracted from \code{HazardShape} objects
 #'
 #' @description
+#' `r lifecycle::badge("deprecated")`
+#'
 #' This function displays the estimated hazard shape given a
 #' data set.
 #'
@@ -13,6 +15,7 @@
 #' @examples
 #' #--------------------------------------------------------------------------------
 #' # Example 1: Increasing hazard and its corresponding TTT plot with simulated data
+#'
 #' hweibull <- function(x, shape, scale){
 #'   dweibull(x, shape, scale)/pweibull(x, shape, scale, lower.tail = FALSE)
 #'   }
@@ -25,8 +28,10 @@
 #'
 #'
 #' #--------------------------------------------------------------------------------
+#' @keywords internal
 #' @export
 Hazard_Shape <- function(object){
+  lifecycle::deprecate_warn("2.2.0", "Hazard_Shape()", "print.HazardShape()")
   cat("--------------------------------------------------------------------\n")
   cat("Hazard shape: ")
   cat(object$hazard_type)
@@ -34,6 +39,5 @@ Hazard_Shape <- function(object){
   cat("--------------------------------------------------------------------\n")
   if ( !is.null(object$warning) ){
     warning(object$warning)
-  } else {cat("Successful estimate!")}
+  } else {cat("Successful estimate!\n")}
 }
-

@@ -4,11 +4,11 @@
 
 [![R-CMD-check](https://github.com/Jaimemosg/EstimationTools/workflows/R-CMD-check/badge.svg)](https://github.com/Jaimemosg/EstimationTools/actions)
 [![AppVeyor Build
-Status](https://ci.appveyor.com/api/projects/status/github/Jaimemosg/EstimationTools?branch=master&svg=true)](https://ci.appveyor.com/project/Jaimemosg/EstimationTools)
+Status](https://ci.appveyor.com/api/projects/status/github/Jaimemosg/EstimationTools?branch=master&svg=true)](https://ci.appveyor.com/project/Jaimemosg/EstimationTools)<!-- [![Codecov test coverage](https://codecov.io/gh/Jaimemosg/EstimationTools/branch/master/graph/badge.svg)](https://codecov.io/gh/Jaimemosg/EstimationTools?branch=master) -->
 [![Codecov test
-coverage](https://codecov.io/gh/Jaimemosg/EstimationTools/branch/master/graph/badge.svg)](https://codecov.io/gh/Jaimemosg/EstimationTools?branch=master)
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version-ago/EstimationTools)](https://cran.r-project.org/package=EstimationTools)
-[![CRAN\_Download\_Badge](http://cranlogs.r-pkg.org/badges/EstimationTools)](https://cran.r-project.org/package=EstimationTools)
+coverage](https://codecov.io/gh/Jaimemosg/EstimationTools/branch/master/graph/badge.svg)](https://app.codecov.io/gh/Jaimemosg/EstimationTools?branch=master)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version-ago/EstimationTools)](https://cran.r-project.org/package=EstimationTools)
+[![CRAN_Download_Badge](http://cranlogs.r-pkg.org/badges/EstimationTools)](https://cran.r-project.org/package=EstimationTools)
 [![Lifecycle:
 maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
 [![Project Status: Active – The project has reached a stable, usable
@@ -20,19 +20,20 @@ developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.re
 <!-- [![Dependencies](https://tinyverse.netlify.com/badge/EstimationTools)](https://cran.r-project.org/package=EstimationTools) -->
 <!-- badges: end -->
 
-# EstimationTools <img src="man/figure/ETLogo.png" align="right" height="200" align="right"/>
+# EstimationTools <img src="man/figures/ETLogo.png" align="right" height="200" style="float:right; height:200px;"/>
 
-The goal of `EstimationTools` is to provide a routine for parameter
-estimation of probability density/mass functions in `R`.
+<!-- <img src="man/figures/ETLogo.png" align="right" height="200"/> -->
 
-*Edit (27/07/2020)* – We have implemented new tools and we have
-performed some deep modifications in our `summary` method for `maxlogL`
-objects. You can find out in our
-[changelog](https://jaimemosg.github.io/EstimationTools/news/index.html).
+The goal of `EstimationTools` is to provide tools and routines for
+maximum likelihood estimation of probability density/mass functions in
+`R`.
+
+<!-- _Edit (17/03/2021)_ -- We have performed a TTT plot implementation. You can find out in our [changelog](https://jaimemosg.github.io/EstimationTools/news/index.html). -->
+<!-- _Edit (27/07/2020)_ -- We have implemented new tools and we have performed some deep modifications in our `summary` method for `maxlogL` objects. You can find out in our [changelog](https://jaimemosg.github.io/EstimationTools/news/index.html). -->
 
 ## Installation
 
-You can install the latest version (2.1.0) of `EstimationTools` typing
+You can install the latest version (4.0.0) of `EstimationTools` typing
 the following command lines in `R` console:
 
 ``` r
@@ -41,7 +42,9 @@ devtools::install_github('Jaimemosg/EstimationTools', force = TRUE)
 library(EstimationTools)
 ```
 
-Or you can install the released version (2.0.0) from
+<!-- 4.0.0 -->
+
+Or you can install the released version (4.0.0) from
 [CRAN](https://cran.r-project.org/package=EstimationTools) if you
 prefer. You can also type the following command lines in `R` console:
 

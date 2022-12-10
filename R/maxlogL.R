@@ -4,31 +4,40 @@
 #' @author Jaime Mosquera Gutiérrez, \email{jmosquerag@unal.edu.co}
 #'
 #' @description
-#' Function to compute maximum likelihood estimators (MLE)
+#' `r lifecycle::badge("maturing")`
+#'
+#' Wrapper function to compute maximum likelihood estimators (MLE)
 #' of any distribution implemented in \code{R}.
 #'
 #' @param x a vector with data to be fitted. This argument must be a matrix
 #'          with hierarchical distributions.
 #' @param dist a length-one character vector with the name of density/mass function
-#'             of interest. The default value is \code{'dnorm'}, to compute maximum likelihood
-#'             estimators of normal distribution.
+#'             of interest. The default value is \code{'dnorm'}, to compute maximum
+#'             likelihood estimators of normal distribution.
 #' @param fixed a list with fixed/known parameters of distribution of interest.
 #'              Fixed parameters must be passed with its name.
-#' @param link a list with names of parameters to be linked, and names of the link function
-#'             object. For names of parameters, please visit documentation of density/mass
-#'             function. There are three link functions available: \code{\link{log_link}},
-#'             \code{\link{logit_link}} and \code{\link{NegInv_link}}.
+#' @param link a list with names of parameters to be linked, and names of the link
+#'             function object. For names of parameters, please visit documentation
+#'             of density/mass function. There are three link functions available:
+#'             \code{\link{log_link}}, \code{\link{logit_link}} and
+#'             \code{\link{NegInv_link}}.
 #' @param start a numeric vector with initial values for the parameters to be estimated.
 #' @param lower a numeric vector with lower bounds, with the same length of argument
 #'              `start` (for box-constrained optimization).
 #' @param upper a numeric vector with upper bounds, with the same length of argument
 #'              `start` (for box-constrained optimization).
 #' @param optimizer a length-one character vector with the name of optimization routine.
-#'                  \code{\link{nlminb}}, \code{\link{optim}} and
-#'                  \code{\link[DEoptim]{DEoptim}} are available; \code{\link{nlminb}}
-#'                  is the default routine.
-#' @param control control parameters of the optimization routine. Please, visit documentation of selected
-#'                optimizer for further information.
+#'                  \code{\link{nlminb}}, \code{\link{optim}},
+#'                  \code{\link[DEoptim]{DEoptim}} and \code{\link[GA]{ga}}are available;
+#'                  custom optimization routines can also be implemented.
+#'                  \code{\link{nlminb}} is the default routine.
+#' @param control control parameters of the optimization routine. Please, visit
+#'                documentation of selected optimizer for further information.
+#' @param StdE_method a length-one character vector with the routine for Hessian matrix
+#'                    computation. The This is needed for standard error estimation. The
+#'                    options available are \code{"optim"} and \code{"numDeriv"}. For
+#'                    further information, visit \code{\link[stats]{optim}} or
+#'                    \code{\link[numDeriv]{hessian}}.
 #' @param silent  logical. If TRUE, warnings of \code{maxlogL} are suppressed.
 #' @param ... further arguments to be supplied to the optimizer.
 #'
@@ -57,11 +66,12 @@
 #' @importFrom DEoptim DEoptim
 #' @importFrom BBmisc is.error
 #' @importFrom numDeriv hessian
+#' @importFrom GA ga
 #'
 #' @examples
 #' library(EstimationTools)
 #'
-#' #--------------------------------------------------------------------------------
+#' #----------------------------------------------------------------------------
 #' # Example 1: estimation with one fixed parameter
 #' x <- rnorm(n = 10000, mean = 160, sd = 6)
 #' theta_1 <- maxlogL(x = x, dist = 'dnorm', control = list(trace = 1),
@@ -70,7 +80,7 @@
 #' summary(theta_1)
 #'
 #'
-#' #--------------------------------------------------------------------------------
+#' #----------------------------------------------------------------------------
 #' # Example 2: both parameters of normal distribution mapped with logarithmic
 #' # function
 #' theta_2 <- maxlogL(x = x, dist = "dnorm",
@@ -84,8 +94,9 @@
 #' if (!require('gamlss.dist')) install.packages('gamlss.dist')
 #' library(gamlss.dist)
 #' z <- rZIP(n=1000, mu=6, sigma=0.08)
-#' theta_3  <- maxlogL(x = z, dist='dZIP', start = c(0, 0), lower = c(-Inf, -Inf),
-#'                    upper = c(Inf, Inf), optimizer = 'optim',
+#' theta_3  <- maxlogL(x = z, dist = 'dZIP', start = c(0, 0),
+#'                    lower = c(-Inf, -Inf), upper = c(Inf, Inf),
+#'                    optimizer = 'optim',
 #'                    link = list(over=c("mu", "sigma"),
 #'                    fun = c("log_link", "logit_link")))
 #' summary(theta_3)
@@ -120,7 +131,7 @@
 #' @importFrom Rdpack reprompt
 #'
 #' @seealso \code{\link{summary.maxlogL}}, \code{\link{optim}}, \code{\link{nlminb}},
-#'          \code{\link{DEoptim}}, \code{\link{DEoptim.control}},
+#'          \code{\link[DEoptim]{DEoptim}}, \code{\link[DEoptim]{DEoptim.control}},
 #'          \code{\link{maxlogLreg}}, \code{\link{bootstrap_maxlogL}}
 #'
 #==============================================================================
@@ -129,7 +140,9 @@
 #' @export
 maxlogL <- function(x, dist = 'dnorm', fixed = NULL, link = NULL,
                     start = NULL, lower = NULL, upper = NULL,
-                    optimizer = 'nlminb', control = NULL, silent = FALSE, ...){
+                    optimizer = 'nlminb', control = NULL,
+                    StdE_method = c('optim', 'numDeriv'),
+                    silent = FALSE, ...){
 
   if (silent) options(warn = -1)
   call <- match.call()
@@ -149,11 +162,12 @@ maxlogL <- function(x, dist = 'dnorm', fixed = NULL, link = NULL,
   if ( !is.character(dist) ) stop(paste0("'dist' argument must be a character ",
                                          "string \n \n"))
 
-  solvers <- c('nlminb', 'optim', 'DEoptim')
-  if ( !optimizer %in% solvers ){
-    stop(c("Select optimizers from the following list: \n \n",
-           "  --> ",paste0(solvers, collapse=", ")))
-  }
+  solvers <- unique(c('nlminb', 'optim', 'DEoptim', 'ga', optimizer))
+  solvers <- match.arg(optimizer, solvers)
+  # if ( !optimizer %in% solvers ){
+  #   stop(c("Select optimizers from the following list: \n \n",
+  #          "  --> ",paste0(solvers, collapse=", ")))
+  # }
 
   if ( !is.null(link) ){
     if (length(match(link$over, names(arguments)) ) == 0)
@@ -237,38 +251,65 @@ maxlogL <- function(x, dist = 'dnorm', fixed = NULL, link = NULL,
   }
 
   # Optimizers
+  fit <- NULL
   if ( optimizer == 'nlminb' ) {
     nlminbcontrol <- control
-    fit <- nlminb(start = start, objective = ll,
-                  lower = lower, upper = upper, control = nlminbcontrol, ...)
-    fit$objective <- -fit$objective
-  }
-
-  if ( optimizer == 'optim' ) {
+    nlminb_fit <- nlminb(start = start, objective = ll,
+                         lower = lower, upper = upper, control = nlminbcontrol,
+                         ...)
+    fit$par <- nlminb_fit$par
+    fit$objective <- -nlminb_fit$objective
+  } else if ( optimizer == 'optim' ) {
     optimcontrol <- control
-    if (npar<2) fit <- optim(par = start, fn = ll, lower = lower, upper=upper)
-    fit <- optim(par = start,fn = ll, control = optimcontrol, ...)
-    fit$objective <- -fit$value
-  }
-
-  if ( optimizer == 'DEoptim' ) {
+    if (npar<2) optim_fit <- optim(par = start, fn = ll, lower = lower,
+                                   upper=upper)
+    optim_fit <- optim(par = start,fn = ll, control = optimcontrol, ...)
+    fit$par <- optim_fit$par
+    fit$objective <- -optim_fit$value
+  } else if ( optimizer == 'DEoptim' ) {
     if (is.null(lower) | is.null(upper)) stop("'lower' and 'upper'
                                                limits must be defined
-                                               for 'DEoptim' optimizer", "\n\n")
-    DEoptimcontrol <- c(trace = FALSE, control)
+                                               for 'DEoptim' optimizer",
+                                              "\n\n")
+    DEoptimcontrol <- c(control, trace = FALSE)
     trace_arg <- which(names(DEoptimcontrol) == "trace")
     if (length(trace_arg) > 1){
-      if (length(trace_arg) == 2){
-        DEoptimcontrol$trace <- NULL
-      } else {
-        warn <-"Argument 'trace' in 'DEoptim.control' has multiple definitions \n"
-        warning(warn)
-      }
+      control_index <- switch(as.character(call$control[[1]]),
+                              list = trace_arg[2])
+      DEoptimcontrol[[control_index]] <- NULL
     }
-    fit <- DEoptim(fn = ll, lower = lower, upper = upper,
-                   control = DEoptimcontrol, ...)
-    fit$par <- fit$optim$bestmem
-    fit$objective <- -fit$optim$bestval
+    # if (length(trace_arg) > 1){
+    #   if (length(trace_arg) == 2){
+    #     DEoptimcontrol$trace <- NULL
+    #   } else {
+    #     warn <-"Argument 'trace' in 'DEoptim.control' has multiple definitions \n"
+    #     warning(warn)
+    #   }
+    # }
+    DE_fit <- DEoptim(fn = ll, lower = lower, upper = upper,
+                      control = DEoptimcontrol, ...)
+    fit$original_fit <- DE_fit
+    fit$par <- as.numeric(DE_fit$optim$bestmem)
+    fit$objective <- -DE_fit$optim$bestval
+  } else if ( optimizer == 'ga' ) {
+    if (is.null(lower) | is.null(upper)) stop("'lower' and 'upper'
+                                               limits must be defined
+                                               for 'GA::ga' optimizer", "\n\n")
+    plusll <- function(param) -ll(param)
+    dots <- substitute(...())
+    dots <- c(monitor = FALSE, control, dots)
+    trace_arg <- which(names(dots) == "monitor")
+    if (length(trace_arg) > 1){
+      dots$monitor <- NULL
+    }
+    ga_fit <- do.call(optimizer, c(list(type = "real-valued", fitness = plusll,
+                                        lower = lower, upper = upper), dots))
+    fit$original_fit <- ga_fit
+    fit$par <- as.numeric(ga_fit@solution)
+    fit$objective <- ga_fit@fitnessValue
+  } else {
+    fit <- do.call(optimizer, c(list(fn, lower, upper, start, control, ...)))
+    # pendiente la lista de outputs de un optimizador S3
   }
 
   # Revert link mapping
@@ -277,26 +318,50 @@ maxlogL <- function(x, dist = 'dnorm', fixed = NULL, link = NULL,
                         link_fun = link$fun)
 
   # Hessian computation
-  ll.noLink <- minus_lL(x = x, dist, dist_args = arguments, over = NULL,
-                        link = NULL, npar = npar, fixed = fixed)
-  fit$hessian <- try(optim(par = fit$par, fn = ll.noLink, method = 'L-BFGS-B',
-                           lower = fit$par - 0.5*fit$par,
-                           upper = fit$par + 0.5*fit$par,
-                           hessian = TRUE)$hessian, silent = TRUE)
-  # fit$hessian <- try(optimHess(par = fit$par, fn = ll.noLink, method = 'L-BFGS-B',
-  #                              lower = fit$par - 0.5*fit$par,
-  #                              upper = fit$par + 0.5*fit$par), silent = TRUE)
-  StdE_Method <- "Hessian from optim"
-  if ( (any(is.na(fit$hessian)) | is.error(fit$hessian)) |
-       any(is.character(fit$hessian)) ){
+  StdE_method <- match.arg(StdE_method, c('optim', 'numDeriv'))
+
+  ll.noLink <- try(
+    minus_lL(
+      x = x, dist,
+      dist_args = arguments,
+      over = NULL,
+      link = NULL,
+      npar = npar,
+      fixed = fixed
+    ),
+    silent = TRUE
+  )
+
+  if ( StdE_method == 'optim' ){
+    # We could also try with optimHess
+    fit$hessian <- try(
+      optim(par = fit$par,
+            fn = ll.noLink,
+            method = 'L-BFGS-B',
+            lower = fit$par - 0.5*fit$par,
+            upper = fit$par + 0.5*fit$par,
+            hessian = TRUE)$hessian,
+      silent = TRUE
+    )
+    StdE_computation <- "Hessian from optim"
+  }
+  if (
+    any(is.na(fit$hessian) |
+    is.error(fit$hessian)) |
+    any(is.character(fit$hessian)) |
+    StdE_method == 'numDeriv'
+  ){
     fit$hessian <- try(numDeriv::hessian(ll.noLink, fit$par), silent = TRUE)
-    StdE_Method <- "numDeriv::hessian"
+    StdE_computation <- "numDeriv::hessian"
   }
 
   ## Standard error computation
-  if ( (any(is.na(fit$hessian)) | is.error(fit$hessian)) |
-       any(is.character(fit$hessian)) ){
-    StdE_Method <- "'optim' and 'numDeriv' failed"
+  if (
+    any(is.na(fit$hessian) |
+    is.error(fit$hessian)) |
+    any(is.character(fit$hessian))
+  ){
+    StdE_computation <- paste0("'", StdE_method, "' failed")
     fit$hessian <- NA
     fit$StdE <- NA
   } else {
@@ -307,7 +372,10 @@ maxlogL <- function(x, dist = 'dnorm', fixed = NULL, link = NULL,
   names_numeric <- rep("", times = npar)
   j <- 1
   for (i in 1:length(arguments)){
-    if (is.numeric(arguments[[i]]) || is.symbol(arguments[[i]])){
+    if (
+      is.numeric(arguments[[i]]) ||
+      is.symbol(arguments[[i]])
+    ){
       names_numeric[j] <- names(arguments[i])
       j <- j + 1
     }
@@ -322,7 +390,7 @@ maxlogL <- function(x, dist = 'dnorm', fixed = NULL, link = NULL,
                  start = start, lower = lower, upper = upper,
                  data = x)
   outputs <- list(npar = npar - length(fixed), n = length(x),
-                  StdE_Method = StdE_Method, type = "maxlogL",
+                  StdE_Method = StdE_computation, type = "maxlogL",
                   par_names = names_numeric)
   result <- list(fit = fit, inputs = inputs, outputs = outputs)
   class(result) <- "maxlogL"

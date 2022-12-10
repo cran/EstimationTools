@@ -4,6 +4,8 @@
 #' @author Jaime Mosquera Gutiérrez, \email{jmosquerag@unal.edu.co}
 #'
 #' @description
+#' `r lifecycle::badge("experimental")`
+#'
 #' Draws a TTT plot of an \code{EmpiricalTTT} object, one for each strata.
 #'
 #' TTT plots are graphed in the same order in which they appear in the list
@@ -74,10 +76,7 @@
 #'
 #' @seealso \code{\link{TTTE_Analytical}}, \code{\link[graphics]{matplot}}
 #' @method plot EmpiricalTTT
-#'
-#==============================================================================
-# plot method -----------------------------------------------------------------
-#==============================================================================
+#' @export
 plot.EmpiricalTTT <- function(x, add = FALSE, grid = FALSE, type = "l", pch = 1,
                               xlab = "i/n", ylab = expression(phi[n](i/n)), ...){
   matplot(x$`i/n`, x$phi_n, xlab = xlab, ylab = ylab,

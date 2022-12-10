@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{Hazard_Shape}
 \alias{Hazard_Shape}
-\title{Summary of \code{HazardShape} objects}
+\title{Hazard shape extracted from \code{HazardShape} objects}
 \usage{
 Hazard_Shape(object)
 }
@@ -12,12 +12,15 @@ Hazard_Shape(object)
 \code{\link{TTT_hazard_shape}}.}
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
 This function displays the estimated hazard shape given a
 data set.
 }
 \examples{
 #--------------------------------------------------------------------------------
 # Example 1: Increasing hazard and its corresponding TTT plot with simulated data
+
 hweibull <- function(x, shape, scale){
   dweibull(x, shape, scale)/pweibull(x, shape, scale, lower.tail = FALSE)
   }
@@ -34,3 +37,4 @@ Hazard_Shape(my_initial_guess)
 \author{
 Jaime Mosquera Gutiérrez \email{jmosquerag@unal.edu.co}
 }
+\keyword{internal}

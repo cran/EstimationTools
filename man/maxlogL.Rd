@@ -14,6 +14,7 @@ maxlogL(
   upper = NULL,
   optimizer = "nlminb",
   control = NULL,
+  StdE_method = c("optim", "numDeriv"),
   silent = FALSE,
   ...
 )
@@ -23,16 +24,17 @@ maxlogL(
 with hierarchical distributions.}
 
 \item{dist}{a length-one character vector with the name of density/mass function
-of interest. The default value is \code{'dnorm'}, to compute maximum likelihood
-estimators of normal distribution.}
+of interest. The default value is \code{'dnorm'}, to compute maximum
+likelihood estimators of normal distribution.}
 
 \item{fixed}{a list with fixed/known parameters of distribution of interest.
 Fixed parameters must be passed with its name.}
 
-\item{link}{a list with names of parameters to be linked, and names of the link function
-object. For names of parameters, please visit documentation of density/mass
-function. There are three link functions available: \code{\link{log_link}},
-\code{\link{logit_link}} and \code{\link{NegInv_link}}.}
+\item{link}{a list with names of parameters to be linked, and names of the link
+function object. For names of parameters, please visit documentation
+of density/mass function. There are three link functions available:
+\code{\link{log_link}}, \code{\link{logit_link}} and
+\code{\link{NegInv_link}}.}
 
 \item{start}{a numeric vector with initial values for the parameters to be estimated.}
 
@@ -43,12 +45,19 @@ function. There are three link functions available: \code{\link{log_link}},
 \code{start} (for box-constrained optimization).}
 
 \item{optimizer}{a length-one character vector with the name of optimization routine.
-\code{\link{nlminb}}, \code{\link{optim}} and
-\code{\link[DEoptim]{DEoptim}} are available; \code{\link{nlminb}}
-is the default routine.}
+\code{\link{nlminb}}, \code{\link{optim}},
+\code{\link[DEoptim]{DEoptim}} and \code{\link[GA]{ga}}are available;
+custom optimization routines can also be implemented.
+\code{\link{nlminb}} is the default routine.}
 
-\item{control}{control parameters of the optimization routine. Please, visit documentation of selected
-optimizer for further information.}
+\item{control}{control parameters of the optimization routine. Please, visit
+documentation of selected optimizer for further information.}
+
+\item{StdE_method}{a length-one character vector with the routine for Hessian matrix
+computation. The This is needed for standard error estimation. The
+options available are \code{"optim"} and \code{"numDeriv"}. For
+further information, visit \code{\link[stats]{optim}} or
+\code{\link[numDeriv]{hessian}}.}
 
 \item{silent}{logical. If TRUE, warnings of \code{maxlogL} are suppressed.}
 
@@ -67,7 +76,9 @@ A list with class \code{"maxlogL"} containing the following lists:
 }
 }
 \description{
-Function to compute maximum likelihood estimators (MLE)
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#maturing}{\figure{lifecycle-maturing.svg}{options: alt='[Maturing]'}}}{\strong{[Maturing]}}
+
+Wrapper function to compute maximum likelihood estimators (MLE)
 of any distribution implemented in \code{R}.
 }
 \details{
@@ -85,7 +96,7 @@ The following generic functions can be used with a \code{maxlogL} object:
 \examples{
 library(EstimationTools)
 
-#--------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
 # Example 1: estimation with one fixed parameter
 x <- rnorm(n = 10000, mean = 160, sd = 6)
 theta_1 <- maxlogL(x = x, dist = 'dnorm', control = list(trace = 1),
@@ -94,7 +105,7 @@ theta_1 <- maxlogL(x = x, dist = 'dnorm', control = list(trace = 1),
 summary(theta_1)
 
 
-#--------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
 # Example 2: both parameters of normal distribution mapped with logarithmic
 # function
 theta_2 <- maxlogL(x = x, dist = "dnorm",
@@ -108,8 +119,9 @@ summary(theta_2)
 if (!require('gamlss.dist')) install.packages('gamlss.dist')
 library(gamlss.dist)
 z <- rZIP(n=1000, mu=6, sigma=0.08)
-theta_3  <- maxlogL(x = z, dist='dZIP', start = c(0, 0), lower = c(-Inf, -Inf),
-                   upper = c(Inf, Inf), optimizer = 'optim',
+theta_3  <- maxlogL(x = z, dist = 'dZIP', start = c(0, 0),
+                   lower = c(-Inf, -Inf), upper = c(Inf, Inf),
+                   optimizer = 'optim',
                    link = list(over=c("mu", "sigma"),
                    fun = c("log_link", "logit_link")))
 summary(theta_3)
@@ -144,10 +156,11 @@ summary(theta_42)
 }
 \seealso{
 \code{\link{summary.maxlogL}}, \code{\link{optim}}, \code{\link{nlminb}},
-\code{\link{DEoptim}}, \code{\link{DEoptim.control}},
+\code{\link[DEoptim]{DEoptim}}, \code{\link[DEoptim]{DEoptim.control}},
 \code{\link{maxlogLreg}}, \code{\link{bootstrap_maxlogL}}
 
 Other maxlogL: 
+\code{\link{hazard_fun}()},
 \code{\link{maxlogLreg}()}
 }
 \author{

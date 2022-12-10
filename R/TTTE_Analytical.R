@@ -5,6 +5,8 @@
 #' @author Jaime Mosquera Gutiérrez, \email{jmosquerag@unal.edu.co}
 #'
 #' @description
+#' `r lifecycle::badge("experimental")`
+#'
 #' This function allows to compute the TTT curve from a formula
 #' containing a factor type variable (classification variable).
 #'
@@ -142,8 +144,8 @@
 #==============================================================================
 # Empirical TTT computation ---------------------------------------------------
 #==============================================================================
-TTTE_Analytical <- function(formula, response = NULL, scaled = TRUE, data,
-                            method = c('Barlow', 'censored'),
+TTTE_Analytical <- function(formula, response = NULL, scaled = TRUE,
+                            data = NULL, method = c('Barlow', 'censored'),
                             partition_method = NULL, silent = FALSE, ...){
   if (silent) options(warn = -1)
   method <- match.arg(method, c('Barlow', 'censored'))
@@ -202,6 +204,8 @@ TTTE_Analytical <- function(formula, response = NULL, scaled = TRUE, data,
 
   TTT <- TTT_formula_selector(inputs, scaled, method)
   TTT$x_var <- inputs$x
+  TTT$response <- y
+  TTT$formula <- formula
   class(TTT) <- "EmpiricalTTT"
   if (silent) options(warn = 0)
   return(TTT)
