@@ -5,8 +5,8 @@ knitr::opts_chunk$set(
 )
 
 ## ----install, eval=FALSE------------------------------------------------------
-#  if (!require('devtools')) install.packages('devtools')
-#  devtools::install_github('Jaimemosg/EstimationTools', force = TRUE)
+# if (!require('devtools')) install.packages('devtools')
+# devtools::install_github('Jaimemosg/EstimationTools', force = TRUE)
 
 ## ----HessianOptim, warning=FALSE, message=FALSE-------------------------------
 library(EstimationTools)

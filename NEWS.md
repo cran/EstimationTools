@@ -1,12 +1,44 @@
+# EstimationTools 4.3.1
+- Build everything in R 4.5.1.
+- Fix S3 method consistency in `maxlogLreg()`.
+
+# EstimationTools 4.3.0
+- Fix log-likelihood in `maxlogLreg()`.
+- Enable further input arguments for legend in plots of residuals.
+
+# EstimationTools 4.2.0
+- Implement plots of residuals (diagnostic plots).
+
+# EstimationTools 4.1.1
+
+- Implementation of residuals: Cox-Snell, randomized quantile residuals and
+martingale residuals.
+
+# EstimationTools 4.1.0
+
+- We implemented two functions to compute expected values.
+
+# EstimationTools 4.0.1
+
+- We fixed the hazard function routine implemented to compute hazard functions
+for any distribution.
+- We also implemented a routine to compute cumulative hazard functions for any
+distribution.
+- We fixed and updated the documentation.
+
 # EstimationTools 4.0.0
 
-- We changed the behaviour of `plot.HazardShape` function, its responsibility was splitted. Now, this function just plots the empirical  TTT function, and we also created the `legend.HazardShape` to customize the legend options.
+- We changed the behaviour of `plot.HazardShape` function, its responsibility was 
+splitted. Now, this function just plots the empirical TTT function, and we also 
+created the `legend.HazardShape` to customize the legend options.
 - We fixed some examples in the documentation.
 
 # EstimationTools 3.0.0
 
-- From this version, `maxlogLreg` returns the censorship matrix. Check the [documentation](https://jaimemosg.github.io/EstimationTools/reference/maxlogLreg.html) for further information about the censorship matrix.
-- We have implemented a wrapper of integration routines.
+- **EstimationTools** was build in R 4.2.1.
+- From this version, `maxlogLreg` returns the censorship matrix. Check the [documentation](https://jaimemosg.github.io/EstimationTools/reference/maxlogLreg.html) 
+for further information about the censorship matrix.
+- We have implemented a wrapper (an API) of integration routines.
 
 # EstimationTools 2.4.0 
 
@@ -62,7 +94,3 @@
 - 'summary' method only reports results. It does not perform any computation, bootstrap through 'summary' function has been deprecated.
 
 - We have made a careful spelling check in our documentation.
-
-# EstimationTools 3.0.0
-
-- **EstimationTools** was build in R 4.2.1.

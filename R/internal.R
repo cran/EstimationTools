@@ -93,6 +93,7 @@ saturated_maxlogL <- function(object, silent = TRUE){
   maxlogL_call <- object$inputs$call
   maxlogL_call[['data']] <- data.frame(X, y)
   maxlogL_call[['formulas']] <- formulas
+  maxlogL_call[["y_dist"]][[2]] <- as.name("y")
   saturated_model <- eval(maxlogL_call)
   if (silent) options(warn = 0)
   return(saturated_model)
@@ -116,3 +117,10 @@ null_maxlogL <- function(object, silent = TRUE){
   if (silent) options(warn = 0)
   return(saturated_model)
 }
+#==============================================================================
+# Identity function for Monte Carlo integrals ---------------------------------
+#==============================================================================
+#' @export
+#' @keywords internal
+#' @rdname internalfunc
+identity <- function(x) x

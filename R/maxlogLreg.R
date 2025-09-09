@@ -42,6 +42,10 @@
 #'             and \code{\link{NegInv_link}}. Take into account: the order
 #'             used in argument \code{over} corresponds to the order in argument
 #'             \code{link}.
+#' @param optimizer a length-one character vector with the name of optimization
+#'                  routine. \code{\link[stats:nlminb]{nlminb}}, \code{\link[stats:optim]{optim}} and
+#'                  \code{\link[DEoptim:DEoptim]{DEoptim}} are available; \code{\link[stats:nlminb]{nlminb}}
+#'                  is the default routine.
 #' @param start a numeric vector with initial values for the parameters to be
 #'              estimated. Zero is the default value.
 #' @param lower a numeric vector with lower bounds, with the same lenght of
@@ -50,10 +54,8 @@
 #' @param upper a numeric vector with upper bounds, with the same lenght of
 #'              argument `start` (for box-constrained optimization). \code{Inf}
 #'              is the default value.
-#' @param optimizer a length-one character vector with the name of optimization
-#'                  routine.  \code{\link{nlminb}}, \code{\link{optim}} and
-#'                  \code{\link[DEoptim]{DEoptim}} are available; \code{\link{nlminb}}
-#'                  is the default routine.
+#' @param inequalities a character vector with the inequality constrains for
+#'                     the distribution parameters.
 #' @param control control parameters of the optimization routine. Please, visit
 #'                documentation of selected optimizer for further information.
 #' @param StdE_method a length-one character vector with the routine for Hessian
@@ -99,7 +101,7 @@
 #' \itemize{
 #'   \item \eqn{g_k(\cdot)} is the \eqn{k}-th link function.
 #'   \item \eqn{\boldsymbol{\eta}_{j}} is the value of the linear predictor for the
-#'         $j^{th}$ for all the observations.
+#'         \eqn{j^{th}} for all the observations.
 #'   \item \eqn{\boldsymbol{\beta}_j = (\beta_{0j}, \beta_{1j},\dots,
 #'         \beta_{(p_j-1)j})^\top} are the fixed effects vector, where \eqn{p_j}
 #'         is the number of parameters in linear predictor \eqn{j} and
@@ -109,9 +111,9 @@
 #'         \code{y_dist}.
 #' }
 #'
-#' Then, \code{maxlogLreg} maximizes the log L through \code{\link{optim}},
-#' \code{\link{nlminb}} or \code{\link{DEoptim}}. \code{maxlogLreg} generates
-#' an S3 object of class \code{maxlogL}.
+#' Then, \code{maxlogLreg} maximizes the log L through
+#' \code{\link[stats:optim]{optim}}, \code{\link[stats:nlminb]{nlminb}} or
+#' \code{\link[DEoptim:DEoptim]{DEoptim}}. \code{maxlogLreg} generates an S3 obj.
 #'
 #' Estimation with censorship can be handled with \code{Surv} objects
 #' (see example 2). The output object stores the corresponding censorship matrix,
@@ -197,17 +199,23 @@
 #'
 #' @importFrom Rdpack reprompt
 #'
-#' @seealso \code{\link{summary.maxlogL}}, \code{\link{optim}}, \code{\link{nlminb}},
-#'          \code{\link{DEoptim}}, \code{\link{DEoptim.control}},
-#'          \code{\link{maxlogL}}, \code{\link{bootstrap_maxlogL}}
+#' @seealso 
+#'   \code{\link{summary.maxlogL}}, 
+#'   \code{\link[stats:optim]{optim}}, 
+#'   \code{\link[stats:nlminb]{nlminb}}, 
+#'   \code{\link[DEoptim:DEoptim]{DEoptim}}, 
+#'   \code{\link[DEoptim:DEoptim.control]{DEoptim.control}}, 
+#'   \code{\link{maxlogL}}, 
+#'   \code{\link{bootstrap_maxlogL}}
 #'
 #==============================================================================
 # Maximization routine for regression -----------------------------------------
 #==============================================================================
 #' @export
 maxlogLreg <- function(formulas, y_dist, support = NULL, data = NULL,
-                       subset = NULL, fixed = NULL, link = NULL, start = NULL,
-                       lower = NULL, upper = NULL, optimizer = 'nlminb',
+                       subset = NULL, fixed = NULL, link = NULL,
+                       optimizer = 'nlminb', start = NULL,
+                       lower = NULL, upper = NULL, inequalities = NULL,
                        control = NULL, silent = FALSE,
                        StdE_method = c('optim', 'numDeriv'), ...){
 
@@ -235,15 +243,9 @@ maxlogLreg <- function(formulas, y_dist, support = NULL, data = NULL,
                                      "must be specified \n \n"))
 
   if ( !inherits(y_dist, "formula") ) stop(paste0("'y_dist' argument must be ",
-                                                 "a formula specifying ",
-                                                 "distribution of response ",
-                                                 "the variable \n \n"))
-
-  solvers <- c('nlminb', 'optim', 'DEoptim')
-  if ( !optimizer %in% solvers ){
-    stop(c("Select optimizers from the following list: \n \n",
-           "  --> ",paste0(solvers, collapse=", ")))
-  }
+                                                  "a formula specifying ",
+                                                  "distribution of response ",
+                                                  "the variable \n \n"))
 
   if ( !is.null(link) ){
     if (length(match(link$over, names(arguments)) ) == 0)
@@ -316,7 +318,7 @@ maxlogLreg <- function(formulas, y_dist, support = NULL, data = NULL,
   formulas <- formulas[par_order]
 
   ## Design matrixes
-  dsgn_mat <- model.matrix.MLreg(formulas = formulas, data = data,
+  dsgn_mat <- model_matrix_maxlogL(formulas = formulas, data = data,
                                  y_dist = y_dist, npar = npar,
                                  par_names = par_names)
   levels <- dsgn_mat$levels
@@ -324,8 +326,15 @@ maxlogLreg <- function(formulas, y_dist, support = NULL, data = NULL,
 
   ## Number of regression parameters
   n_betas <- sum(as.numeric(unlist(sapply(dsgn_mat[1:npar], ncol))))
-  b_names <- apply(matrix(1:npar, nrow = npar), MARGIN = 1,
+  par_matrix <- matrix(1:npar, nrow = npar)
+  b_names <- apply(par_matrix, MARGIN = 1,
                    FUN = function(x) colnames(dsgn_mat[[x]]))
+
+  # Patch to build a list when npar == 1
+  if (nrow(par_matrix) == 1){
+    b_names <- list(b_names[1]) # list(b_names[,1])
+  }
+
   names(b_names) <- par_names
   b_length <- sapply(dsgn_mat[1:npar], ncol)
 
@@ -342,51 +351,89 @@ maxlogLreg <- function(formulas, y_dist, support = NULL, data = NULL,
                       b_names = b_names, npar = npar, b_length = b_length)
 
   # Optimizers
-  if ( optimizer == 'nlminb' ) {
-    nlminbcontrol <- control
-    fit <- nlminb(start = start, objective = minus_lL_LinReg,
-                  lower = lower, upper = upper, control = nlminbcontrol, ...,
-                  mat = dsgn_mat, distr = distr, dist_args = arguments,
-                  over = link$over, link = link$fun, npar = npar, fixed = fixed,
-                  par_names = par_names, b_length = b_length)
-    fit$objective <- -fit$objective
-  }
+  if (is.character(optimizer)){
 
-  if ( optimizer == 'optim' ) {
-    optimcontrol <- control
-    if (npar<2) fit <- optim(par = start, fn = minus_lL_LinReg, lower = lower,
-                             upper=upper,mat = dsgn_mat, distr = distr,
-                             dist_args = arguments, over = link$over,
-                             link = link$fun, npar = npar, fixed = fixed,
-                             par_names = par_names, b_length = b_length)
-    fit <- optim(par = start,fn = minus_lL_LinReg, control = optimcontrol, ...,
-                 mat = dsgn_mat, distr = distr, dist_args = arguments,
-                 over = link$over, link = link$fun, npar = npar, fixed = fixed,
-                 par_names = par_names, b_length = b_length)
-    fit$objective <- -fit$value
-  }
-
-  if ( optimizer == 'DEoptim' ) {
-    if (is.null(lower) | is.null(upper)) stop("'lower' and 'upper'
-                                               limits must be defined
-                                               for 'DEoptim' optimizer", "\n\n")
-    DEoptimcontrol <- c(trace = FALSE, control)
-    trace_arg <- which(names(DEoptimcontrol) == "trace")
-    if (length(trace_arg) > 1){
-      if (length(trace_arg) == 2){
-        DEoptimcontrol$trace <- NULL
-      } else {
-        warn <-"Argument 'trace' in 'DEoptim.control' has multiple definitions \n"
-        warning(warn)
-      }
+    solvers <- c('nlminb', 'optim', 'DEoptim')
+    if ( !optimizer %in% solvers ){
+      stop(c("Select optimizers from the following list: \n \n",
+             "  --> ",paste0(solvers, collapse=", ")))
     }
-    fit <- DEoptim(fn = minus_lL_LinReg, lower = lower, upper = upper,
-                   control = DEoptimcontrol, ..., mat = dsgn_mat,
-                   distr = distr, dist_args = arguments, over = link$over,
-                   link = link$fun, npar = npar, fixed = fixed,
+
+    if ( optimizer == 'nlminb' ) {
+      nlminbcontrol <- control
+      fit <- nlminb(start = start, objective = minus_lL_LinReg,
+                    lower = lower, upper = upper, control = nlminbcontrol, ...,
+                    mat = dsgn_mat, distr = distr, dist_args = arguments,
+                    over = link$over, link = link$fun, npar = npar, fixed = fixed,
+                    par_names = par_names, b_length = b_length, ineqs = inequalities)
+      fit$objective <- -fit$objective
+    }
+
+    if ( optimizer == 'optim' ) {
+      optimcontrol <- control
+      if (npar<2) fit <- optim(par = start, fn = minus_lL_LinReg, lower = lower,
+                               upper=upper,mat = dsgn_mat, distr = distr,
+                               dist_args = arguments, over = link$over,
+                               link = link$fun, npar = npar, fixed = fixed,
+                               par_names = par_names, b_length = b_length)
+      fit <- optim(par = start,fn = minus_lL_LinReg, control = optimcontrol, ...,
+                   mat = dsgn_mat, distr = distr, dist_args = arguments,
+                   over = link$over, link = link$fun, npar = npar, fixed = fixed,
                    par_names = par_names, b_length = b_length)
-    fit$par <- as.numeric(fit$optim$bestmem)
-    fit$objective <- -fit$optim$bestval
+      fit$objective <- -fit$value
+    }
+
+    if ( optimizer == 'DEoptim' ) {
+      if (is.null(lower) | is.null(upper)) stop("'lower' and 'upper'
+                                                 limits must be defined
+                                                 for 'DEoptim' optimizer", "\n\n")
+      DEoptimcontrol <- c(trace = FALSE, control)
+      trace_arg <- which(names(DEoptimcontrol) == "trace")
+      if (length(trace_arg) > 1){
+        if (length(trace_arg) == 2){
+          DEoptimcontrol$trace <- NULL
+        } else {
+          warn <-"Argument 'trace' in 'DEoptim.control' has multiple definitions \n"
+          warning(warn)
+        }
+      }
+      fit <- DEoptim(fn = minus_lL_LinReg, lower = lower, upper = upper,
+                     control = DEoptimcontrol, ..., mat = dsgn_mat,
+                     distr = distr, dist_args = arguments, over = link$over,
+                     link = link$fun, npar = npar, fixed = fixed,
+                     par_names = par_names, b_length = b_length)
+      fit$par <- as.numeric(fit$optim$bestmem)
+      fit$objective <- -fit$optim$bestval
+    }
+  }
+
+  if (is.optimizer.config(optimizer)){
+    objective_fun <- list(minus_lL_LinReg)
+    names(objective_fun) <- optimizer$objective_name
+
+    bounds_arguments <- list(lower, upper, start)
+    names(bounds_arguments) <- c(
+      optimizer$bounds_arguments$lower_name,
+      optimizer$bounds_arguments$upper_name,
+      optimizer$bounds_arguments$start_name
+    )
+    args_LL <- list(
+      mat = dsgn_mat, distr = distr, dist_args = arguments,
+      over = link$over, link = link$fun, npar = npar, fixed = fixed,
+      par_names = par_names, b_length = b_length
+    )
+
+    fit <- do.call(
+      what = optimizer$optimizer_name,
+      args = c(
+        objective_fun,
+        optimizer$further_args,
+        bounds_arguments,
+        args_LL
+      )
+    )
+    fit$par <- fit[[optimizer$outputs_names$optim_vals]]
+    fit$objective <- fit[[optimizer$outputs_names$objective_vals]]
   }
 
   ## Regression parameters names
@@ -399,16 +446,16 @@ maxlogLreg <- function(formulas, y_dist, support = NULL, data = NULL,
   # Hessian computation
   StdE_method <- match.arg(StdE_method, c('optim', 'numDeriv'))
   if ( StdE_method == 'optim' ){
-  	fit$hessian <- try(optim(par = fit$par, fn = minus_lL_LinReg,
-                           method = 'L-BFGS-B',
-                           lower = fit$par - 0.5*fit$par,
-                           upper = fit$par + 0.5*fit$par,
-                           hessian = TRUE, mat = dsgn_mat, distr = distr,
-                           dist_args = arguments, over = link$over,
-                           link = link$fun, npar = npar, fixed = fixed,
-                           par_names = par_names, b_length = b_length)$hessian,
-                     silent = TRUE)
-  	StdE_computation <- "Hessian from optim"
+    fit$hessian <- try(optim(par = fit$par, fn = minus_lL_LinReg,
+                             method = 'L-BFGS-B',
+                             lower = fit$par - 0.5*fit$par,
+                             upper = fit$par + 0.5*fit$par,
+                             hessian = TRUE, mat = dsgn_mat, distr = distr,
+                             dist_args = arguments, over = link$over,
+                             link = link$fun, npar = npar, fixed = fixed,
+                             par_names = par_names, b_length = b_length)$hessian,
+                       silent = TRUE)
+    StdE_computation <- "Hessian from optim"
   }
   if ( (any(is.na(fit$hessian)) | is.error(fit$hessian)) |
        any(is.character(fit$hessian)) | StdE_method == 'numDeriv' ){
@@ -455,7 +502,7 @@ maxlogLreg <- function(formulas, y_dist, support = NULL, data = NULL,
                  formulas = formulas, fixed = fixed, link = link, cens = cens,
                  start = start, lower = lower, upper = upper,
                  optimizer = optimizer, data = dsgn_mat$data)
-  outputs <- list(npar = npar - length(fixed), n = length(dsgn_mat$y),
+  outputs <- list(npar = npar, n = length(dsgn_mat$y),
                   StdE_Method = StdE_computation, type = "maxlogLreg",
                   b_length = b_length, levels = levels,
                   par_names = par_names, response = dsgn_mat$y,
@@ -510,8 +557,10 @@ set_values <- function(input, n_betas, par_names, par_order,
     # Reorder the parameters test[[1]] <- input[[1]][c(3,1,2)]
     input_order <- match(par_names, names(input))
     input <- input[input_order]
-    reg_order <- apply(matrix(1:npar, nrow = npar), MARGIN = 1,
-                       FUN = function(x) match(b_names[[x]], input_names[[x]]))
+    reg_order <- apply(
+      matrix(par_names, nrow = npar), MARGIN = 1,
+      FUN = function(x) match(b_names[[x]], input_names[input_order][[x]])
+    )
     na_pos <- lapply(lapply(reg_order, is.na), which)
     reg_order <- lapply(lapply(reg_order, na.omit), as.numeric)
     input <- apply(matrix(1:npar, nrow = npar), MARGIN = 1,
@@ -542,7 +591,23 @@ change <- function(x){
 #==============================================================================
 # Design matrix composition ---------------------------------------------------
 #==============================================================================
-model.matrix.MLreg <- function(formulas, data, y_dist, npar, par_names){
+#' @export
+#' @method model.matrix maxlogL
+#' @importFrom stats model.matrix
+model.matrix.maxlogL <- function(object, ...) {
+  # Expect object to contain what the helper needs:
+  # object$formulas, object$data, object$y_dist, object$npar, object$par_names
+  model_matrix_maxlogL(
+    formulas  = object$formulas,
+    data      = object$data,
+    y_dist    = object$y_dist,
+    npar      = object$npar,
+    par_names = object$par_names
+  )
+}
+#' @keywords internal
+#' @noRd
+model_matrix_maxlogL <- function(formulas, data, y_dist, npar, par_names){
   if ( !any(lapply(formulas, class) == "formula") ){
     stop("All elements in argument 'formulas' must be of class formula")
   }
@@ -641,53 +706,100 @@ Surv_transform <- function(y_dist, data){
     stop("Response variable must be of class, 'numeric', 'factor' or a Surv' object")
   }
   status <- c(obs, left, right)
-  cens_data <- matrix(c(y,status), nrow = length(y))
+  cens_data <- matrix(c(y, status), nrow = length(y))
   return(cens = cens_data)
 }
 #==============================================================================
 # log-likelihood function computation -----------------------------------------
 #==============================================================================
 minus_lL_LinReg <- function(param, mat, distr, dist_args, over, link, npar,
-                            fixed, par_names, b_length, summation = TRUE){
-    # Linear predictor
-    betas_list <- all_betas(b_length = b_length, npar = npar,
-                            param = param)
-    param <- lapply(X = 1:npar, FUN = LinPred,
-                    betas = betas_list, mat = mat[1:npar])
-    names(param) <- par_names
+                            fixed, par_names, b_length, ineqs = NULL){
+  # Linear predictor
+  betas_list <- all_betas(b_length = b_length, npar = npar,
+                          param = param)
+  param <- lapply(X = 1:npar, FUN = LinPred,
+                  betas = betas_list, mat = mat[1:npar])
+  names(param) <- par_names
+  original_scale_param <- param
 
-    if( !is.null(link) & !is.null(over) ){
-      linked_params <- link_list(over = over, dist_args = dist_args,
-                                 npar = npar)
-      if ( !is.null(linked_params) ){
-        link_eval <- vector( mode = "list", length = length(linked_params) )
-        link <- paste0(link, "()")
-        link_eval <- lapply( 1:length(linked_params),
-                             FUN=function(x) eval(parse(text = link[x])) )
-        for (i in 1:length(linked_params)){
-          g_inv <- paste0("link_eval[[", i, "]]$g_inv")
-          g_inv <- eval(parse(text=g_inv))
-          param[[linked_params[i]]] <- do.call( what = "g_inv",
-                                                args = list(eta = param[[linked_params[i]]]) )
-        }
+  if( !is.null(link) & !is.null(over) ){
+    linked_params <- link_list(over = over, dist_args = dist_args,
+                               npar = npar)
+    if ( !is.null(linked_params) ){
+      link_eval <- vector( mode = "list", length = length(linked_params) )
+      link <- paste0(link, "()")
+      link_eval <- lapply( 1:length(linked_params),
+                           FUN=function(x) eval(parse(text = link[x])) )
+      for (i in 1:length(linked_params)){
+        g_inv <- paste0("link_eval[[", i, "]]$g_inv")
+        g_inv <- eval(parse(text=g_inv))
+        param[[linked_params[i]]] <- do.call(
+          what = "g_inv",
+          args = list(eta = param[[linked_params[i]]])
+        )
       }
     }
-    y <- mat$y
-    delta <- mat$status
-    cdf  <- paste0('p', substring(distr, 2))
+  }
+  cdf  <- paste0('p', substring(distr, 2))
+  y <- mat$y
+  delta <- mat$status
 
-    logf <- do.call( what = distr, args = c(list(x = y), param,
-                                           log = TRUE, fixed) )
-    logS <- do.call( what = cdf, args = c(list(q = y), param,
-                                          lower.tail = FALSE,
-                                          log.p = TRUE, fixed) )
-    logF <- do.call( what = cdf, args = c(list(q = y), param,
-                                          lower.tail = TRUE,
-                                          log.p = TRUE, fixed) )
-    ll <- sum( logf*delta[,1] + logF*delta[,2] + logS*delta[,3] )
+  logf <- do.call( what = distr, args = c(list(x = y), param,
+                                          log = TRUE, fixed) )
 
-    # Negative of log-Likelihood function
-    return(as.numeric(-ll)) # Useful when using Rmpfr (LuA)
+  ll <- logf*delta[, 1]
+
+  if ( any(delta[, 2] > 0) ){
+    logF <- do.call(
+      what = cdf,
+      args = c(
+        list(q = y),
+        param,
+        lower.tail = TRUE,
+        log.p = TRUE,
+        fixed = fixed
+      )
+    )
+    ll <- ll + logF*delta[, 2]
+  }
+
+  if ( any(delta[, 3] > 0) ) {
+    logS <- do.call(
+      what = cdf,
+      args = c(
+        list(q = y),
+        param,
+        lower.tail = FALSE,
+        log.p = TRUE, fixed
+      )
+    )
+    ll <- ll + logS*delta[, 3]
+  }
+
+  ll <- -sum(ll)
+
+  if ( !is.null(ineqs) ){
+    # Non-linear constrain body
+    ineqs <- lapply(ineqs, BBmisc::asQuoted)
+    g_ineqs <- eval( bquote( function(){do.call( "rbind", .(ineqs) )} ) )
+
+    # Non-linear constrain parameters
+    ineqs_params <- vector( mode = "list", length = length(par_names) )
+    names(ineqs_params) <- par_names
+    formals(g_ineqs) <- ineqs_params
+
+    eval_g_ineqs <- do.call(
+      what = "g_ineqs",
+      args = original_scale_param
+    )
+
+    if ( any(!eval_g_ineqs) ){
+      ll <- ll + 1e10
+    }
+  }
+
+  # Negative of log-Likelihood function
+  return(as.numeric(ll)) # Useful when using Rmpfr (LuA)
 }
 param_index <- function(b_length, npar){
   b_length_plus <- c(0, as.numeric(b_length))
@@ -710,14 +822,14 @@ all_betas <- function(b_length, npar, param){
   return(betas)
 }
 # all_betas <- function(b_length, npar, param){
-  # betas <- vector(mode = "list", length = npar)
-  # b_length_plus <- c(0, as.numeric(b_length))
-  # for ( i in 1:(length(b_length_plus)-1) ){
-  #   j <- i + 1
-  #   a <- sum(b_length_plus[1:i]) + 1
-  #   b <- sum(b_length_plus[1:j])
-  #   betas[[i]] <- matrix(param[a:b], ncol = 1)
-  # }
+# betas <- vector(mode = "list", length = npar)
+# b_length_plus <- c(0, as.numeric(b_length))
+# for ( i in 1:(length(b_length_plus)-1) ){
+#   j <- i + 1
+#   a <- sum(b_length_plus[1:i]) + 1
+#   b <- sum(b_length_plus[1:j])
+#   betas[[i]] <- matrix(param[a:b], ncol = 1)
+# }
 #   return(betas)
 # }
 LinPred <- function(j, betas, mat){

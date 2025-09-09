@@ -13,10 +13,11 @@ maxlogLreg(
   subset = NULL,
   fixed = NULL,
   link = NULL,
+  optimizer = "nlminb",
   start = NULL,
   lower = NULL,
   upper = NULL,
-  optimizer = "nlminb",
+  inequalities = NULL,
   control = NULL,
   silent = FALSE,
   StdE_method = c("optim", "numDeriv"),
@@ -63,6 +64,11 @@ and \code{\link{NegInv_link}}. Take into account: the order
 used in argument \code{over} corresponds to the order in argument
 \code{link}.}
 
+\item{optimizer}{a length-one character vector with the name of optimization
+routine. \code{\link[stats:nlminb]{nlminb}}, \code{\link[stats:optim]{optim}} and
+\code{\link[DEoptim:DEoptim]{DEoptim}} are available; \code{\link[stats:nlminb]{nlminb}}
+is the default routine.}
+
 \item{start}{a numeric vector with initial values for the parameters to be
 estimated. Zero is the default value.}
 
@@ -74,10 +80,8 @@ is the default value.}
 argument \code{start} (for box-constrained optimization). \code{Inf}
 is the default value.}
 
-\item{optimizer}{a length-one character vector with the name of optimization
-routine.  \code{\link{nlminb}}, \code{\link{optim}} and
-\code{\link[DEoptim]{DEoptim}} are available; \code{\link{nlminb}}
-is the default routine.}
+\item{inequalities}{a character vector with the inequality constrains for
+the distribution parameters.}
 
 \item{control}{control parameters of the optimization routine. Please, visit
 documentation of selected optimizer for further information.}
@@ -135,7 +139,7 @@ where,
 \itemize{
 \item \eqn{g_k(\cdot)} is the \eqn{k}-th link function.
 \item \eqn{\boldsymbol{\eta}_{j}} is the value of the linear predictor for the
-$j^{th}$ for all the observations.
+\eqn{j^{th}} for all the observations.
 \item \eqn{\boldsymbol{\beta}_j = (\beta_{0j}, \beta_{1j},\dots,
         \beta_{(p_j-1)j})^\top} are the fixed effects vector, where \eqn{p_j}
 is the number of parameters in linear predictor \eqn{j} and
@@ -145,9 +149,9 @@ These terms are specified in \code{formulas} argument.
 \code{y_dist}.
 }
 
-Then, \code{maxlogLreg} maximizes the log L through \code{\link{optim}},
-\code{\link{nlminb}} or \code{\link{DEoptim}}. \code{maxlogLreg} generates
-an S3 object of class \code{maxlogL}.
+Then, \code{maxlogLreg} maximizes the log L through
+\code{\link[stats:optim]{optim}}, \code{\link[stats:nlminb]{nlminb}} or
+\code{\link[DEoptim:DEoptim]{DEoptim}}. \code{maxlogLreg} generates an S3 obj.
 
 Estimation with censorship can be handled with \code{Surv} objects
 (see example 2). The output object stores the corresponding censorship matrix,
@@ -226,12 +230,17 @@ summary(mod_weibull)
 \insertRef{Dennis1981}{EstimationTools}
 }
 \seealso{
-\code{\link{summary.maxlogL}}, \code{\link{optim}}, \code{\link{nlminb}},
-\code{\link{DEoptim}}, \code{\link{DEoptim.control}},
-\code{\link{maxlogL}}, \code{\link{bootstrap_maxlogL}}
+\code{\link{summary.maxlogL}},
+\code{\link[stats:optim]{optim}},
+\code{\link[stats:nlminb]{nlminb}},
+\code{\link[DEoptim:DEoptim]{DEoptim}},
+\code{\link[DEoptim:DEoptim.control]{DEoptim.control}},
+\code{\link{maxlogL}},
+\code{\link{bootstrap_maxlogL}}
 
 Other maxlogL: 
-\code{\link{hazard_fun}()},
+\code{\link{cum_hazard.maxlogL}()},
+\code{\link{expected_value.maxlogL}()},
 \code{\link{maxlogL}()}
 }
 \author{

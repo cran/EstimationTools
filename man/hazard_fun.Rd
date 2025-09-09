@@ -3,22 +3,16 @@
 \encoding{UTF-8}
 \name{hazard_fun}
 \alias{hazard_fun}
-\title{Hazard functions in \code{maxlogL} framework}
+\title{Hazard functions for any distribution}
 \usage{
-hazard_fun(dist, support)
+hazard_fun(distr, log = FALSE)
 }
 \arguments{
-\item{dist}{a length-one character vector with the name of density/mass function
+\item{distr}{a length-one character vector with the name of density/mass function
 of interest.}
 
-\item{support}{a list with the following entries:
-\itemize{
-\item \code{interval}: a two dimensional atomic vector indicating the
-set of possible values of a random variable having the
-distribution specified in \code{y_dist}.
-\item \code{type}: character indicating if distribution has a
-\code{discrete} or a \code{continous} random variable.
-}}
+\item{log}{logical; if TRUE, the natural logarithm of the hazard values are
+returned.}
 }
 \value{
 A function with the folling input arguments:
@@ -34,27 +28,31 @@ argument and creates a hazard function.
 \examples{
 library(EstimationTools)
 
-#--------------------------------------------------------------------------------
-# Example 1: Hazard function of Weibull distribution.
-hweibull1 <- hazard_fun('dweibull', list(interval=c(0, Inf), type='continuous'))
-hweibull2 <- function(x){
-  ans <- dweibull(x, shape = 2, scale = 1)/
-    pweibull(x, shape = 2, scale = 1, lower.tail = FALSE)
-  ans
+#----------------------------------------------------------------------------
+# Example 1: Hazard function of the Weibull distribution.
+
+# Hazard function in the 'maxlogL' framework
+hweibull1 <- hazard_fun('dweibull')
+
+# Hazard function from scratch
+hweibull2 <- function(x, shape, scale){
+  shape/scale * (x/scale)^(shape - 1)
 }
+
+# Comparison
 hweibull1(0.2, shape = 2, scale = 1)
-hweibull2(0.2)
+hweibull2(0.2, shape = 2, scale = 1)
 
 
-#--------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
 
 }
 \seealso{
-Other maxlogL: 
-\code{\link{maxlogLreg}()},
-\code{\link{maxlogL}()}
+Other distributions utilities: 
+\code{\link{cum_hazard_fun}()},
+\code{\link{expected_value}()}
 }
 \author{
 Jaime Mosquera Gutiérrez, \email{jmosquerag@unal.edu.co}
 }
-\concept{maxlogL}
+\concept{distributions utilities}

@@ -4,7 +4,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
-## ---- echo=TRUE, warning=FALSE, message=FALSE---------------------------------
+## ----echo=TRUE, warning=FALSE, message=FALSE----------------------------------
 if (!require('readr')) install.packages('readr')
 library(readr)
 
